@@ -1,9 +1,13 @@
 // ============================================================
-// CHAPAS DEL MUNDIAL 2026 — Physics-Based Football Game
-// Hot-seat multiplayer | Two players, same device
+// CHAPAS DEL MUNDIAL 2026 — Physics-Based Football Game v2
+// Hot-seat multiplayer | Tournament tracking | Admin support
 // ============================================================
 
 'use strict';
+
+// ─── STORAGE KEYS ─────────────────────────────────────────────
+const SK_MATCHES = 'porraMatches';
+const SK_PLAYED  = 'porraPlayedTeams';
 
 // ─── TEAMS DATA ──────────────────────────────────────────────
 const TEAMS = [
@@ -12,7 +16,7 @@ const TEAMS = [
   { name: 'Espanya',       abbr: 'ESP', flag: '🇪🇸', color: '#AA151B', accent: '#F1BF00', textColor: '#F1BF00' },
   { name: 'França',        abbr: 'FRA', flag: '🇫🇷', color: '#003189', accent: '#FFFFFF', textColor: '#FFFFFF' },
   { name: 'Alemanya',      abbr: 'GER', flag: '🇩🇪', color: '#1C1C1C', accent: '#DD0000', textColor: '#FFD700' },
-  { name: 'Anglaterra',    abbr: 'ENG', flag: '🏴', color: '#CF0A2C', accent: '#FFFFFF', textColor: '#FFFFFF' },
+  { name: 'Anglaterra',    abbr: 'ENG', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', color: '#CF0A2C', accent: '#FFFFFF', textColor: '#FFFFFF' },
   { name: 'Portugal',      abbr: 'POR', flag: '🇵🇹', color: '#006600', accent: '#FF0000', textColor: '#FFD700' },
   { name: 'P. Baixos',     abbr: 'NED', flag: '🇳🇱', color: '#FF6300', accent: '#FFFFFF', textColor: '#FFFFFF' },
   { name: 'Itàlia',        abbr: 'ITA', flag: '🇮🇹', color: '#003580', accent: '#FFFFFF', textColor: '#FFFFFF' },
@@ -36,8 +40,8 @@ const RESTITUTION      = 0.72;    // bounce energy retention
 const STOP_VEL         = 0.05;    // velocity threshold to stop
 const MAX_DRAG_PX      = 110;     // max drag distance in px (canvas space)
 const MAX_SPEED        = 22;      // max launch speed
-const TOKEN_R          = 23;      // token radius px (canvas)
-const BALL_R           = 13;      // ball radius px (canvas)
+const TOKEN_R          = 17;      // token radius px (canvas) — smaller for better fit
+const BALL_R           = 10;      // ball radius px (canvas)
 
 // ─── GAME STATE ───────────────────────────────────────────────
 let canvas, ctx;
@@ -120,19 +124,20 @@ function resizeCanvas() {
 window.addEventListener('resize', () => { if (state === 'PLAYING' || state === 'GOAL_ANIM') resizeCanvas(); });
 
 function computePitch() {
-  const mg = Math.round(CANVAS_W * 0.065);
+  const mg = Math.round(CANVAS_W * 0.042); // tighter side margins
   P.x     = mg;
-  P.y     = Math.round(CANVAS_H * 0.09);
+  P.y     = Math.round(CANVAS_H * 0.055); // tighter top margin
   P.w     = CANVAS_W - mg * 2;
-  P.h     = CANVAS_H - Math.round(CANVAS_H * 0.18);
+  P.h     = CANVAS_H - Math.round(CANVAS_H * 0.11); // more pitch height
   P.cx    = P.x + P.w / 2;
   P.cy    = P.y + P.h / 2;
   P.goalH = P.h * 0.32;
-  P.goalD = Math.round(CANVAS_W * 0.04); // goal depth
+  P.goalD = Math.round(CANVAS_W * 0.038); // goal depth
 }
 
 // ─── LOBBY BUILDER ────────────────────────────────────────────
 function buildLobby() {
+  const playedTeams = getPlayedTeams();
   ['grid1', 'grid2'].forEach((id, panelIdx) => {
     const grid = document.getElementById(id);
     grid.innerHTML = '';
@@ -143,15 +148,24 @@ function buildLobby() {
       card.dataset.panel = panelIdx;
       card.setAttribute('role', 'option');
       card.setAttribute('aria-label', t.name);
-      card.innerHTML = `<span class="tc-flag">${t.flag}</span><span class="tc-abbr">${t.abbr}</span>`;
-      card.addEventListener('click', () => selectTeam(panelIdx, ti));
+      const hasPlayed = playedTeams.includes(t.name);
+      if (hasPlayed) card.classList.add('already-played');
+      card.innerHTML = `<span class="tc-flag">${t.flag}</span><span class="tc-abbr">${t.abbr}</span>${hasPlayed ? '<span class="tc-played-badge">✓</span>' : ''}`;
+      if (!hasPlayed) card.addEventListener('click', () => selectTeam(panelIdx, ti));
       grid.appendChild(card);
     });
   });
+  // Show count
+  const remaining = TEAMS.filter(t => !playedTeams.includes(t.name)).length;
+  const infoEl = document.getElementById('teamsRemainingInfo');
+  if (infoEl) infoEl.textContent = playedTeams.length > 0 ? `${remaining} equips disponibles — ${playedTeams.length} ja han jugat` : '';
 }
 
 function selectTeam(panelIdx, teamIdx) {
-  // Prevent picking same team
+  // Prevent picking already-played team
+  const playedTeams = getPlayedTeams();
+  if (playedTeams.includes(TEAMS[teamIdx].name)) return;
+  // Prevent picking same team as other player
   const otherIdx = panelIdx === 0 ? 1 : 0;
   if (selectedTeams[otherIdx] === teamIdx) return;
 
@@ -162,13 +176,16 @@ function selectTeam(panelIdx, teamIdx) {
   const selEl = document.getElementById(`sel${panelIdx + 1}`);
   selEl.innerHTML = `<span class="sel-flag">${t.flag}</span><span class="sel-name">${t.name}</span>`;
 
-  // Refresh both grids to handle disabled states
+  // Refresh both grids
   ['grid1', 'grid2'].forEach((id, pi) => {
     const otherSelected = selectedTeams[pi === 0 ? 1 : 0];
     document.getElementById(id).querySelectorAll('.team-card').forEach(card => {
       const ci = parseInt(card.dataset.ti);
       card.classList.toggle('selected', selectedTeams[pi] === ci);
-      card.classList.toggle('disabled', ci === otherSelected);
+      // Mark as session-disabled if other player has it (but NOT already-played ones)
+      if (!card.classList.contains('already-played')) {
+        card.classList.toggle('disabled', ci === otherSelected);
+      }
     });
   });
 
@@ -495,10 +512,12 @@ function endGame() {
   state = 'GAMEOVER';
   const w = score[0] >= WIN_SCORE ? 0 : 1;
   const t = TEAMS[selectedTeams[w]];
-  const o = TEAMS[selectedTeams[1 - w]];
 
-  document.getElementById('goWinner').textContent  = `${t.flag} ${t.name} guanya!`;
-  document.getElementById('goScore').textContent   = `${score[0]} – ${score[1]}`;
+  // Save result to localStorage tournament system
+  saveMatchResult();
+
+  document.getElementById('goWinner').textContent    = `${t.flag} ${t.name} guanya!`;
+  document.getElementById('goScore').textContent     = `${score[0]} – ${score[1]}`;
   document.getElementById('goBothFlags').textContent = `${TEAMS[selectedTeams[0]].flag}  ${TEAMS[selectedTeams[1]].flag}`;
   document.getElementById('gameoverScreen').style.display = 'flex';
 
@@ -1007,4 +1026,34 @@ function roundRect(ctx, x, y, w, h, r) {
   }
 }
 
-console.log('⚽ Chapas del Mundial 2026 — Game Engine v1.0 loaded!');
+// ─── TOURNAMENT STORAGE ───────────────────────────────────────
+function getPlayedTeams() {
+  try { return JSON.parse(localStorage.getItem(SK_PLAYED) || '[]'); }
+  catch { return []; }
+}
+
+function saveMatchResult() {
+  if (selectedTeams[0] === null || selectedTeams[1] === null) return;
+  try {
+    const matches = JSON.parse(localStorage.getItem(SK_MATCHES) || '[]');
+    const played  = getPlayedTeams();
+    const t1 = TEAMS[selectedTeams[0]];
+    const t2 = TEAMS[selectedTeams[1]];
+    matches.push({
+      id: Date.now(),
+      date: new Date().toISOString(),
+      team1: { name: t1.name, flag: t1.flag, abbr: t1.abbr, color: t1.color },
+      team2: { name: t2.name, flag: t2.flag, abbr: t2.abbr, color: t2.color },
+      score1: score[0],
+      score2: score[1],
+      winner: score[0] > score[1] ? 'team1' : score[1] > score[0] ? 'team2' : 'draw'
+    });
+    [t1.name, t2.name].forEach(n => { if (!played.includes(n)) played.push(n); });
+    localStorage.setItem(SK_MATCHES, JSON.stringify(matches));
+    localStorage.setItem(SK_PLAYED, JSON.stringify(played));
+    console.log('Result saved:', t1.name, score[0], '-', score[1], t2.name);
+  } catch (e) { console.error('Could not save to localStorage:', e); }
+}
+
+console.log('⚽ Chapas del Mundial 2026 — Game Engine v2.0 loaded!');
+console.log('ℹ️  Admin panel: admin.html | Tournament: tournament.html');

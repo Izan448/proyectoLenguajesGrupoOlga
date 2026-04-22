@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🏆 Classificació – Chapas del Mundial 2026</title>
+  <meta name="description" content="Classificació del torneig de Chapas del Mundial 2026. Consulta la taula de punts i tots els partits jugats." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --dark: #070c18;
+      --dark2: #0d1524;
+      --surface: #1a2540;
+      --border: rgba(255,255,255,0.08);
+      --text: #f0f4ff;
+      --muted: #8094b8;
+      --gold: #f5c518;
+      --blue: #60a5fa;
+      --green: #4ade80;
+      --orange: #fb923c;
+      --radius: 14px;
+      --transition: 180ms ease;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, #0a101e 0%, #0f1a2e 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .hd-brand { display: flex; align-items: center; gap: 10px; }
+    .hd-icon { font-size: 1.8rem; }
+    .hd-title { font-size: 1.1rem; font-weight: 900; letter-spacing: -0.01em; }
+    .hd-title span { background: linear-gradient(135deg, #f5c518, #ff9d00); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .hd-links { display: flex; gap: 8px; flex-wrap: wrap; }
+    .hd-link {
+      padding: 7px 14px;
+      border-radius: 99px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+      transition: all var(--transition);
+    }
+    .hd-link:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+    .hd-link.active { background: rgba(245,197,24,0.1); color: var(--gold); border-color: rgba(245,197,24,0.3); }
+    .last-update { font-size: 0.72rem; color: var(--muted); }
+
+    /* MAIN */
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 16px 60px; }
+
+    /* STATS BANNER */
+    .stats-banner {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-val { font-size: 2rem; font-weight: 900; color: var(--gold); }
+    .stat-lbl { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+
+    /* SECTION TITLE */
+    .sec-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sec-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: rgba(245,197,24,0.12);
+      color: var(--gold);
+      border: 1px solid rgba(245,197,24,0.25);
+    }
+
+    /* STANDINGS TABLE */
+    .table-wrap {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    thead th {
+      padding: 10px 12px;
+      text-align: center;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    thead th:first-child, thead th:nth-child(2) { text-align: left; }
+    tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background var(--transition); }
+    tbody tr:hover { background: rgba(255,255,255,0.03); }
+    tbody tr:last-child { border-bottom: none; }
+    td { padding: 10px 12px; text-align: center; color: var(--muted); }
+    td:first-child { font-weight: 800; color: var(--muted); width: 36px; }
+    td:nth-child(2) { text-align: left; }
+    .team-cell { display: flex; align-items: center; gap: 8px; }
+    .team-flag-td { font-size: 1.3rem; line-height: 1; }
+    .team-name-td { font-weight: 700; color: var(--text); }
+    .pts-td { font-size: 1.1rem; font-weight: 900; color: var(--text); }
+    .pts-td-gold { color: var(--gold); }
+    .pts-td-silver { color: #a5b4fc; }
+    .pts-td-bronze { color: #86efac; }
+    .pos-1 td:first-child { color: var(--gold); }
+    .pos-2 td:first-child { color: #a5b4fc; }
+    .pos-3 td:first-child { color: #86efac; }
+
+    /* MATCH LIST */
+    .match-list { display: flex; flex-direction: column; gap: 10px; }
+    .match-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+      transition: all var(--transition);
+    }
+    .match-card:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.14); }
+    .match-team { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.9rem; }
+    .match-team.right { flex-direction: row-reverse; }
+    .match-team-flag { font-size: 1.4rem; }
+    .match-score {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--text);
+      text-align: center;
+      min-width: 80px;
+      letter-spacing: 0.05em;
+    }
+    .match-winner { color: var(--gold); }
+    .match-loser { color: var(--muted); font-weight: 400; }
+    .match-date { font-size: 0.7rem; color: rgba(128,148,184,0.6); text-align: center; margin-top: 4px; }
+    .match-win-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 99px;
+      background: rgba(245,197,24,0.12);
+      color: var(--gold);
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+    .empty-text { font-size: 1rem; margin-bottom: 8px; }
+    .empty-sub { font-size: 0.85rem; opacity: 0.7; }
+
+    /* RESPONSIVE */
+    @media (max-width: 600px) {
+      .match-team-name { display: none; }
+      .match-score { min-width: 60px; font-size: 1.2rem; }
+      header { padding: 14px 14px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="hd-brand">
+      <span class="hd-icon">🏆</span>
+      <div>
+        <div class="hd-title">Classificació <span>Chapas 2026</span></div>
+        <div class="last-update" id="lastUpdate">Actualitzant...</div>
+      </div>
+    </div>
+    <div class="hd-links">
+      <a href="game.html" class="hd-link">⚽ Jugar</a>
+      <a href="tournament.html" class="hd-link active">🏆 Classificació</a>
+      <a href="admin.html" class="hd-link">🔐 Admin</a>
+      <a href="index.html" class="hd-link">📋 Reglament</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- Stats banner -->
+    <div class="stats-banner">
+      <div class="stat-card">
+        <div class="stat-val" id="statMatches">0</div>
+        <div class="stat-lbl">Partits Jugats</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statTeams">0</div>
+        <div class="stat-lbl">Equips Participants</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statGoals">0</div>
+        <div class="stat-lbl">Gols Totals</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statAvg">–</div>
+        <div class="stat-lbl">Mitja Gols/Partit</div>
+      </div>
+    </div>
+
+    <!-- Standings table -->
+    <div class="sec-title">
+      📊 Taula de Classificació
+      <span class="sec-badge" id="teamsCount">0 equips</span>
+    </div>
+    <div class="table-wrap" id="standingsWrap">
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <div class="empty-text">Encara no s'han jugat partits</div>
+        <div class="empty-sub">Juga el primer partit per veure la classificació!</div>
+      </div>
+    </div>
+
+    <!-- Match history -->
+    <div class="sec-title">
+      📅 Historial de Partits
+      <span class="sec-badge" id="matchCount">0 partits</span>
+    </div>
+    <div id="matchList">
+      <div class="empty-state">
+        <div class="empty-icon">⚽</div>
+        <div class="empty-text">No hi ha partits registrats</div>
+        <div class="empty-sub"><a href="game.html" style="color:#60a5fa">Comença a jugar!</a></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const SK_MATCHES = 'porraMatches';
+
+    function loadMatches() {
+      try { return JSON.parse(localStorage.getItem(SK_MATCHES) || '[]'); }
+      catch { return []; }
+    }
+
+    function calcStandings(matches) {
+      const map = {};
+      for (const m of matches) {
+        [m.team1, m.team2].forEach((t, idx) => {
+          if (!map[t.name]) map[t.name] = { team: t, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0 };
+          const s = map[t.name];
+          s.p++;
+          s.gf += idx === 0 ? m.score1 : m.score2;
+          s.ga += idx === 0 ? m.score2 : m.score1;
+        });
+        if (m.winner === 'team1') { map[m.team1.name].w++; map[m.team2.name].l++; }
+        else if (m.winner === 'team2') { map[m.team2.name].w++; map[m.team1.name].l++; }
+        else { map[m.team1.name].d++; map[m.team2.name].d++; }
+      }
+      return Object.values(map).sort((a, b) => {
+        const pts = (b.w * 3 + b.d) - (a.w * 3 + a.d);
+        if (pts !== 0) return pts;
+        const gd = (b.gf - b.ga) - (a.gf - a.ga);
+        if (gd !== 0) return gd;
+        return b.gf - a.gf;
+      });
+    }
+
+    function formatDate(iso) {
+      try {
+        const d = new Date(iso);
+        return d.toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      } catch { return iso; }
+    }
+
+    function render() {
+      const matches = loadMatches();
+      const standings = calcStandings(matches);
+
+      // Stats
+      const totalGoals = matches.reduce((s, m) => s + m.score1 + m.score2, 0);
+      document.getElementById('statMatches').textContent = matches.length;
+      document.getElementById('statTeams').textContent = standings.length;
+      document.getElementById('statGoals').textContent = totalGoals;
+      document.getElementById('statAvg').textContent = matches.length > 0 ? (totalGoals / matches.length).toFixed(1) : '–';
+      document.getElementById('lastUpdate').textContent = 'Actualitzat: ' + new Date().toLocaleTimeString('ca-ES');
+
+      // Standings table
+      const sw = document.getElementById('standingsWrap');
+      const tc = document.getElementById('teamsCount');
+      tc.textContent = standings.length + ' equips';
+      if (standings.length === 0) {
+        sw.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Encara no s\'han jugat partits</div><div class="empty-sub">Juga el primer partit per veure la classificació!</div></div>';
+      } else {
+        const posClass = ['pos-1', 'pos-2', 'pos-3'];
+        const ptsClass = ['pts-td-gold', 'pts-td-silver', 'pts-td-bronze'];
+        sw.innerHTML = `<table>
+          <thead><tr>
+            <th>#</th><th>Equip</th>
+            <th title="Partits Jugats">PJ</th>
+            <th title="Guanyats">PG</th>
+            <th title="Empatats">PE</th>
+            <th title="Perduts">PP</th>
+            <th title="Gols a Favor">GF</th>
+            <th title="Gols en Contra">GC</th>
+            <th title="Diferència de Gols">DG</th>
+            <th title="Punts">PTS</th>
+          </tr></thead>
+          <tbody>
+            ${standings.map((s, i) => {
+              const pts = s.w * 3 + s.d;
+              const gd = s.gf - s.ga;
+              const pc = posClass[i] || '';
+              const ptsc = ptsClass[i] || 'pts-td';
+              return `<tr class="${pc}">
+                <td>${i + 1}</td>
+                <td><div class="team-cell"><span class="team-flag-td">${s.team.flag}</span><span class="team-name-td">${s.team.name}</span></div></td>
+                <td>${s.p}</td>
+                <td>${s.w}</td>
+                <td>${s.d}</td>
+                <td>${s.l}</td>
+                <td>${s.gf}</td>
+                <td>${s.ga}</td>
+                <td style="color:${gd > 0 ? '#4ade80' : gd < 0 ? '#f87171' : 'inherit'}">${gd > 0 ? '+' : ''}${gd}</td>
+                <td class="pts-td ${ptsc}">${pts}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`;
+      }
+
+      // Match list
+      const ml = document.getElementById('matchList');
+      const mc = document.getElementById('matchCount');
+      mc.textContent = matches.length + ' partits';
+      if (matches.length === 0) {
+        ml.innerHTML = '<div class="empty-state"><div class="empty-icon">⚽</div><div class="empty-text">No hi ha partits registrats</div><div class="empty-sub"><a href="game.html" style="color:#60a5fa">Comença a jugar!</a></div></div>';
+      } else {
+        const reversed = [...matches].reverse();
+        ml.innerHTML = '<div class="match-list">' + reversed.map(m => {
+          const isW1 = m.winner === 'team1', isW2 = m.winner === 'team2', isDraw = m.winner === 'draw';
+          return `<div class="match-card">
+            <div class="match-team ${isW1 ? 'match-winner' : 'match-loser'}">
+              <span class="match-team-flag">${m.team1.flag}</span>
+              <span class="match-team-name">${m.team1.name}</span>
+              ${isW1 ? '<span class="match-win-badge">🏆</span>' : ''}
+            </div>
+            <div>
+              <div class="match-score">${m.score1} – ${m.score2}</div>
+              <div class="match-date">${formatDate(m.date)}</div>
+            </div>
+            <div class="match-team right ${isW2 ? 'match-winner' : 'match-loser'}">
+              ${isW2 ? '<span class="match-win-badge">🏆</span>' : ''}
+              <span class="match-team-name">${m.team2.name}</span>
+              <span class="match-team-flag">${m.team2.flag}</span>
+            </div>
+          </div>`;
+        }).join('') + '</div>';
+      }
+    }
+
+    render();
+    // Auto-refresh every 15 seconds
+    setInterval(render, 15000);
+  </script>
+</body>
+</html>

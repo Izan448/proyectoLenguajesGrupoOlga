@@ -11,8 +11,12 @@
 </head>
 <body>
 
-  <!-- Back link -->
-  <a href="index.html" class="back-link" id="backLink" aria-label="Tornar al reglament">← Reglament</a>
+  <!-- Back link bar -->
+  <div class="back-link-bar">
+    <a href="index.html" class="back-link" id="backLink" aria-label="Tornar al reglament">← Reglament</a>
+    <a href="tournament.html" class="back-link" id="navTournament" style="margin-left:8px">🏆 Classificació</a>
+    <a href="admin.html" class="back-link" id="navAdmin" style="margin-left:8px">🔐 Admin</a>
+  </div>
 
   <!-- ====================== LOBBY SCREEN ====================== -->
   <div id="lobbyScreen" class="overlay-screen active" role="main">
@@ -25,6 +29,7 @@
         <div class="lobby-badge">⚽ MUNDIAL 2026 · CHAPAS</div>
         <h1 class="lobby-title">Chapas del<br/><span class="lobby-title-gold">Mundial</span></h1>
         <p class="lobby-subtitle">Selecciona els equips, tira les fitxes i marca el gol!</p>
+        <p id="teamsRemainingInfo" style="font-size:0.75rem;color:#fb923c;margin-top:6px;min-height:18px"></p>
       </div>
 
       <div class="team-selectors-layout">
@@ -151,6 +156,7 @@
       <div class="go-buttons">
         <button id="replayBtn" class="btn-replay">🔄 Revanxa</button>
         <button id="backLobbyBtn" class="btn-lobby">🏠 Menú</button>
+        <a href="tournament.html" class="btn-replay" style="background:linear-gradient(135deg,#60a5fa,#7c3aed);color:#fff">🏆 Classificació</a>
         <a href="index.html" class="btn-reg">📋 Reglament</a>
       </div>
     </div>
