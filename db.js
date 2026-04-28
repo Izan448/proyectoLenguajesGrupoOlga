@@ -370,6 +370,31 @@ const DB = (() => {
       catch (e) { console.warn(e); }
     },
 
+    // ── TELEGRAM ─────────────────────────────────────────────
+    async getTelegramConfig() {
+      const defaultCfg = { botToken: '8687020028:AAGQF3ytcAozGPU3JamjlqInl3DSNMHvngw', channelId: '@apuestas_lenguajes' };
+      let cfg = null;
+      if (isOnline()) {
+        try {
+          const snapshot = await firebase.database().ref('telegramConfig').once('value');
+          cfg = snapshot.val();
+        } catch (e) {}
+      } else {
+        cfg = lsGet('porraTelegramConfig');
+      }
+      return {
+        botToken: (cfg && cfg.botToken) ? cfg.botToken : defaultCfg.botToken,
+        channelId: (cfg && cfg.channelId) ? cfg.channelId : defaultCfg.channelId
+      };
+    },
+    async saveTelegramConfig(config) {
+      lsSet('porraTelegramConfig', config);
+      if (isOnline()) {
+        try { await firebase.database().ref('telegramConfig').set(config); }
+        catch (e) { console.warn('Firebase saveTelegramConfig error:', e); }
+      }
+    },
+
     // Sync Firebase → localStorage (called on game load)
     async syncToLocal() {
       if (!isOnline()) return null;

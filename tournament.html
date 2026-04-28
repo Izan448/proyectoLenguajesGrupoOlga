@@ -17,6 +17,7 @@
   <script src="firebase-config.js"></script>
   <script src="auth.js"></script>
   <script src="db.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     :root {
       --dark: #070c18;
@@ -470,6 +471,19 @@
       </div>
     </div>
 
+    <!-- Telegram Banner -->
+    <div id="telegramBanner" style="display:none; background:linear-gradient(135deg, #1c92d2, #f2fcfe); border-radius:var(--radius); padding:20px 24px; margin-bottom:32px; color:#000; align-items:center; gap:20px; justify-content:space-between; flex-wrap:wrap; box-shadow:0 8px 24px rgba(28,146,210,0.2);">
+      <div>
+        <h3 style="font-size:1.4rem; font-weight:900; margin-bottom:6px; display:flex; align-items:center; gap:8px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2"></path></svg>
+          Únete a nuestro Canal de Telegram
+        </h3>
+        <p style="font-size:0.95rem; font-weight:600; opacity:0.8; margin-bottom:12px;">Escanea el código QR para no perderte ningún resultado en directo.</p>
+        <div style="font-weight:900; font-size:1.1rem; color:#0f1a2e; background:rgba(255,255,255,0.6); display:inline-block; padding:4px 12px; border-radius:99px;" id="tgChannelNameText"></div>
+      </div>
+      <div style="background:#fff; padding:10px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);" id="qrcode"></div>
+    </div>
+
     <!-- Standings table -->
     <div class="sec-title">
       📊 Taula de Classificació
@@ -551,6 +565,30 @@
     async function render() {
       const matches = await loadMatches();
       const groups = await loadTournamentGroups();
+      
+      // Load Telegram Config
+      const tgConfig = window.DB && DB.getTelegramConfig ? await DB.getTelegramConfig() : null;
+      const tgBanner = document.getElementById('telegramBanner');
+      if (tgConfig && tgConfig.channelId) {
+        tgBanner.style.display = 'flex';
+        document.getElementById('tgChannelNameText').textContent = tgConfig.channelId;
+        const channelUrl = tgConfig.channelId.startsWith('@') 
+           ? `https://t.me/${tgConfig.channelId.substring(1)}` 
+           : tgConfig.channelId;
+        const qrContainer = document.getElementById('qrcode');
+        qrContainer.innerHTML = '';
+        new QRCode(qrContainer, {
+          text: channelUrl,
+          width: 90,
+          height: 90,
+          colorDark : "#000000",
+          colorLight : "#ffffff",
+          correctLevel : QRCode.CorrectLevel.H
+        });
+      } else {
+        tgBanner.style.display = 'none';
+      }
+
       let standings = [];
       let isTournament = groups && Object.keys(groups).length > 0;
 

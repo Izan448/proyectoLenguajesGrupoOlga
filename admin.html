@@ -452,6 +452,24 @@
         </div>
       </div>
 
+      <div class="add-match-form" style="margin-bottom:20px;">
+        <div class="aform-title" style="color:var(--blue)">✈️ Configuració de Telegram</div>
+        <div style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;">
+          Configura el Bot de Telegram per enviar automàticament els resultats dels partits finalitzats i generar el codi QR públic.
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:12px;">
+          <div>
+            <label style="display:block;font-size:0.8rem;margin-bottom:4px;color:var(--muted)">Bot Token (ex: 123456:ABC...)</label>
+            <input type="text" id="tgBotToken" class="aform-select" style="width:100%" placeholder="Token del Bot" />
+          </div>
+          <div>
+            <label style="display:block;font-size:0.8rem;margin-bottom:4px;color:var(--muted)">Canal ID o Usuari (ex: @ElMeuCanal)</label>
+            <input type="text" id="tgChannelId" class="aform-select" style="width:100%" placeholder="@NomDelCanal" />
+          </div>
+        </div>
+        <button class="btn-save" id="btnSaveTelegram">💾 Guardar Telegram</button>
+      </div>
+
       <div style="background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.2);border-radius:var(--radius);padding:20px">
         <h4 style="color:var(--blue);margin-bottom:8px">ℹ️ Informació del sistema</h4>
         <p style="font-size:0.85rem;color:var(--muted);line-height:1.7">
@@ -599,7 +617,66 @@
     await renderTeams();
     await renderUsers();
     await renderActiveMatch();
+    await renderTelegramConfig();
     populateAddForm();
+  }
+
+  // ── TELEGRAM ──────────────────────────────────────────────────
+  async function renderTelegramConfig() {
+    if (window.DB && DB.getTelegramConfig) {
+      const config = await DB.getTelegramConfig();
+      const tokenInput = document.getElementById('tgBotToken');
+      const channelInput = document.getElementById('tgChannelId');
+      if (tokenInput && config.botToken) tokenInput.value = config.botToken;
+      if (channelInput && config.channelId) channelInput.value = config.channelId;
+    }
+  }
+
+  const btnSaveTg = document.getElementById('btnSaveTelegram');
+  if (btnSaveTg) {
+    btnSaveTg.onclick = async () => {
+      const botToken = document.getElementById('tgBotToken').value.trim();
+      const channelId = document.getElementById('tgChannelId').value.trim();
+      if (window.DB && DB.saveTelegramConfig) {
+        await DB.saveTelegramConfig({ botToken, channelId });
+        showToast('✅ Configuració de Telegram guardada', 'success');
+      }
+    };
+  }
+
+  async function sendTelegramMessage(match, type = 'finish') {
+    const finalChannelId = '@apuestas_lenguajes';
+    const botToken = '8687020028:AAGQF3ytcAozGPU3JamjlqInl3DSNMHvngw';
+
+    let text = '';
+    if (type === 'start') {
+      text = `🔴 *¡Partido en Curso!*\n\nLas apuestas están abiertas:\n${match.team1.flag} ${match.team1.name} *VS* ${match.team2.name} ${match.team2.flag}`;
+    } else {
+      text = `⚽ *¡Partido Finalizado!*\n\n${match.team1.flag} ${match.team1.name} *${match.score1}* - *${match.score2}* ${match.team2.name} ${match.team2.flag}`;
+    }
+
+    const params = new URLSearchParams();
+    params.append('chat_id', finalChannelId);
+    params.append('text', text);
+    params.append('parse_mode', 'Markdown');
+
+    try {
+      const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString()
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.warn('Error enviant a Telegram:', errorData);
+        showToast('⚠️ Error Telegram: ' + errorData.description, 'error');
+      } else {
+        console.log('Mensaje enviado a Telegram correctamente.');
+      }
+    } catch (e) {
+      console.warn('Fallo en fetch a Telegram:', e);
+      showToast('⚠️ Error Telegram: No s\'ha pogut connectar', 'error');
+    }
   }
 
   // ── STATS ─────────────────────────────────────────────────────
@@ -1141,6 +1218,7 @@
       status: 'active'
     };
     await DB.setActiveMatch(matchData);
+    await sendTelegramMessage(matchData, 'start');
     showToast('▶ Partido iniciado. Apuestas abiertas.', 'success');
     renderAll();
   };
@@ -1201,6 +1279,8 @@
       await DB.clearLiveBets(activeMatch.id);
       await DB.clearActiveMatch();
       
+      await sendTelegramMessage(matchData);
+      
       await renderAll();
       showToast(`✅ Finalizado. ${winnersCount} ganadores. Repartidos ${distributed}€`, 'success');
     } catch (e) { showToast('❌ Error: ' + e.message, 'error'); }
@@ -1247,6 +1327,9 @@
       }
       document.getElementById('addScore1').value = 0;
       document.getElementById('addScore2').value = 0;
+      
+      await sendTelegramMessage(matchData);
+      
       await renderAll();
       showToast('✅ Partit afegit!', 'success');
     } catch (e) { showToast('❌ Error: ' + e.message, 'error'); }
