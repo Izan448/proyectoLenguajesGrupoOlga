@@ -187,28 +187,74 @@ const DB = (() => {
       }
     },
 
-    // ── TOURNAMENT GROUPS ────────────────────────────────────
+    // ── TOURNAMENT GROUPS & BRACKET ──────────────────────────
     async getTournamentGroups() {
       if (isOnline()) {
         try {
           const snapshot = await firebase.database().ref('tournamentGroups').once('value');
           return snapshot.val() || null;
-        } catch (e) {
-          console.warn('Firebase getTournamentGroups error:', e);
-        }
+        } catch (e) { return null; }
       }
-      return lsGet(LOCAL_TOURNAMENT);
+      return lsGet('porraTournamentGroups');
     },
-
     async saveTournamentGroups(groups) {
-      lsSet(LOCAL_TOURNAMENT, groups);
+      lsSet('porraTournamentGroups', groups);
+      if (isOnline()) {
+        try { await firebase.database().ref('tournamentGroups').set(groups); }
+        catch (e) {}
+      }
+    },
+    async getTournamentBracket() {
       if (isOnline()) {
         try {
-          await firebase.database().ref('tournamentGroups').set(groups);
-        } catch (e) {
-          console.warn('Firebase saveTournamentGroups error:', e);
-        }
+          const snapshot = await firebase.database().ref('tournamentBracket').once('value');
+          return snapshot.val() || null;
+        } catch (e) { return null; }
       }
+      return lsGet('porraTournamentBracket');
+    },
+    async saveTournamentBracket(bracket) {
+      lsSet('porraTournamentBracket', bracket);
+      if (isOnline()) {
+        try { await firebase.database().ref('tournamentBracket').set(bracket); }
+        catch (e) {}
+      }
+    },
+    async placeChampionBet(uid, teamName, amount) {
+      if (!isOnline()) {
+        const bets = lsGet('porraChampionBets') || {};
+        bets[uid] = { team: teamName, amount };
+        lsSet('porraChampionBets', bets);
+        return;
+      }
+      try { await firebase.database().ref(`championBets/${uid}`).set({ team: teamName, amount }); }
+      catch (e) {}
+    },
+    async getChampionBets() {
+      if (!isOnline()) return lsGet('porraChampionBets') || {};
+      try {
+        const snapshot = await firebase.database().ref('championBets').once('value');
+        return snapshot.val() || {};
+      } catch (e) { return {}; }
+    },
+
+    async placeBracketBet(uid, matchId, amount, prediction) {
+      if (!isOnline()) {
+        const bets = lsGet('porraBracketBets') || {};
+        if (!bets[uid]) bets[uid] = {};
+        bets[uid][matchId] = { amount, prediction };
+        lsSet('porraBracketBets', bets);
+        return;
+      }
+      try { await firebase.database().ref(`bracketBets/${uid}/${matchId}`).set({ amount, prediction }); }
+      catch (e) {}
+    },
+    async getBracketBets() {
+      if (!isOnline()) return lsGet('porraBracketBets') || {};
+      try {
+        const snapshot = await firebase.database().ref('bracketBets').once('value');
+        return snapshot.val() || {};
+      } catch (e) { return {}; }
     },
 
     // ── APUESTAS (PORRA) ─────────────────────────────────────
@@ -257,6 +303,70 @@ const DB = (() => {
         console.warn('Firebase getAllUsersBets error:', e);
         return {};
       }
+    },
+
+    // ── ECONOMY & LIVE BETS ──────────────────────────────────
+    async getUserBalance(uid) {
+      if (!isOnline()) return lsGet('porraBalance_' + uid);
+      try {
+        const snapshot = await firebase.database().ref(`users/${uid}/balance`).once('value');
+        return snapshot.val();
+      } catch (e) { return null; }
+    },
+    async updateUserBalance(uid, amount) {
+      if (!isOnline()) {
+        const current = lsGet('porraBalance_' + uid) || 0;
+        const newBal = current + amount;
+        lsSet('porraBalance_' + uid, newBal);
+        return newBal;
+      }
+      try {
+        const ref = firebase.database().ref(`users/${uid}/balance`);
+        const snapshot = await ref.once('value');
+        const current = snapshot.val() || 0;
+        const newBal = current + amount;
+        await ref.set(newBal);
+        return newBal;
+      } catch (e) { console.warn('Firebase updateUserBalance error:', e); return null; }
+    },
+    async getActiveMatch() {
+      if (!isOnline()) return lsGet('porraActiveMatch');
+      try {
+        const snapshot = await firebase.database().ref('activeMatch').once('value');
+        return snapshot.val();
+      } catch (e) { return null; }
+    },
+    async setActiveMatch(matchData) {
+      if (!isOnline()) { lsSet('porraActiveMatch', matchData); return; }
+      try { await firebase.database().ref('activeMatch').set(matchData); }
+      catch (e) { console.warn('Firebase setActiveMatch error:', e); }
+    },
+    async clearActiveMatch() {
+      if (!isOnline()) { localStorage.removeItem('porraActiveMatch'); return; }
+      try { await firebase.database().ref('activeMatch').remove(); }
+      catch (e) { console.warn(e); }
+    },
+    async placeLiveBet(uid, matchId, amount, prediction) {
+      if (!isOnline()) {
+        const bets = lsGet('porraLiveBets_' + matchId) || {};
+        bets[uid] = { amount, prediction };
+        lsSet('porraLiveBets_' + matchId, bets);
+        return;
+      }
+      try { await firebase.database().ref(`activeBets/${matchId}/${uid}`).set({ amount, prediction }); }
+      catch (e) { console.warn(e); }
+    },
+    async getLiveBets(matchId) {
+      if (!isOnline()) return lsGet('porraLiveBets_' + matchId) || {};
+      try {
+        const snapshot = await firebase.database().ref(`activeBets/${matchId}`).once('value');
+        return snapshot.val() || {};
+      } catch (e) { return {}; }
+    },
+    async clearLiveBets(matchId) {
+      if (!isOnline()) { localStorage.removeItem('porraLiveBets_' + matchId); return; }
+      try { await firebase.database().ref(`activeBets/${matchId}`).remove(); }
+      catch (e) { console.warn(e); }
     },
 
     // Sync Firebase → localStorage (called on game load)

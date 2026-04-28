@@ -170,6 +170,32 @@
     .toast.show { transform: translateY(0); opacity: 1; }
     .toast.success { border-color: rgba(74,222,128,0.4); color: var(--green); }
     .toast.error { border-color: rgba(248,113,113,0.4); color: var(--red); }
+    
+    .balance-badge { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: var(--green); padding: 6px 12px; border-radius: 99px; font-weight: 800; font-size: 0.85rem; margin-right: 10px; }
+    .live-bet-card { background: linear-gradient(145deg, #1a2540, #131c31); border: 2px solid var(--gold); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; position: relative; overflow: hidden; }
+    .live-bet-title { font-size: 1.2rem; font-weight: 900; color: var(--gold); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .live-bet-title::before { content: ''; width: 10px; height: 10px; background: var(--red); border-radius: 50%; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(248,113,113,0.7); } 70% { box-shadow: 0 0 0 10px rgba(248,113,113,0); } 100% { box-shadow: 0 0 0 0 rgba(248,113,113,0); } }
+    .live-bet-teams { display: flex; justify-content: space-around; align-items: center; font-size: 1.1rem; font-weight: 800; margin-bottom: 20px; }
+    .live-bet-vs { color: var(--muted); font-size: 0.9rem; }
+    .live-bet-options { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .lbo-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; color: var(--text); font-weight: 800; transition: all var(--transition); cursor: pointer; }
+    .lbo-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--gold); }
+    .lbo-btn.selected { background: rgba(245,197,24,0.15); border-color: var(--gold); color: var(--gold); }
+    .live-bet-action { display: flex; gap: 10px; margin-top: 16px; align-items: center; }
+    .live-bet-input { flex: 1; padding: 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--gold); font-weight: 900; font-size: 1.1rem; outline: none; }
+    .live-bet-input:focus { border-color: var(--gold); }
+    .live-bet-submit { padding: 12px 24px; background: linear-gradient(135deg,#f5c518,#ff9d00); border: none; border-radius: var(--radius-sm); color: #000; font-weight: 800; font-size: 1rem; cursor: pointer; }
+    .live-bet-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .champion-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 20px; }
+    .champ-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .champ-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--gold); }
+    .champ-btn.selected { background: rgba(245,197,24,0.15); border-color: var(--gold); box-shadow: 0 0 15px rgba(245,197,24,0.3); }
+    .champ-flag { font-size: 2rem; margin-bottom: 8px; }
+    .champ-name { font-weight: 800; color: var(--text); }
+    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; }
+    .modal.open { display:flex; }
+    .modal-content { background:var(--surface); padding:24px; border-radius:var(--radius); border:1px solid var(--border); width:90%; max-width:400px; }
   </style>
 </head>
 <body>
@@ -187,9 +213,11 @@
     <div class="admin-brand">🎲 La Porra 2026</div>
     <div class="admin-tabs">
       <button class="tab-btn active" data-tab="prediccions">📝 Les Meves Prediccions</button>
+      <button class="tab-btn" data-tab="campeon">🌍 Campeón</button>
       <button class="tab-btn" data-tab="ranking">🏆 Rànquing Porra</button>
     </div>
     <div class="admin-actions">
+      <span class="balance-badge" id="userBalanceTxt" title="Haz clic para añadir saldo" style="cursor:pointer; transition: transform 0.2s;">💰 --</span>
       <span style="color:var(--muted);font-size:0.8rem;margin-right:10px;display:flex;align-items:center;" id="userEmailTxt"></span>
       <a href="tournament.html" class="hd-link">🌍 Resultats Reals</a>
       <button class="logout-btn" id="logoutBtn">Tancar sessió</button>
@@ -206,8 +234,22 @@
         Guanyaràs <strong>3 punts</strong> si encertes el resultat exacte, i <strong>1 punt</strong> si encertes el guanyador o l'empat.
       </p>
       
+      <div id="liveBettingWrap"></div>
       <div id="bettingWrap"></div>
+      
+      <div class="panel-title" style="margin-top:40px; display:none;" id="tourBracketTitle">⚔️ Fase Eliminatoria (Bracket)</div>
+      <div id="tourBracketWrap" style="display:flex; flex-direction:column; gap:20px;"></div>
+      
       <button class="save-bets-btn" id="btnSaveBets" style="display:none;">💾 Guardar Totes les Prediccions</button>
+    </div>
+
+    <!-- ── TAB: CAMPEÓN ── -->
+    <div class="tab-panel" id="tab-campeon">
+      <div class="panel-title">🌍 ¿Quién ganará el Mundial?</div>
+      <p style="color:var(--muted); margin-bottom:20px; font-size:0.9rem;">
+        Apuesta a tu favorito para ganar el torneo entero. ¡Si aciertas, la cuota es de <strong>x10.00</strong>! (Cuesta 50€ apostar).
+      </p>
+      <div id="championBetWrap"></div>
     </div>
 
     <!-- ── TAB: RÀNQUING ── -->
@@ -224,6 +266,19 @@
 <!-- ── TOAST ── -->
 <div class="toast" id="toast"></div>
 
+<!-- ── RECHARGE MODAL ── -->
+<div class="modal" id="rechargeModal">
+  <div class="modal-content">
+    <h3 style="color:var(--gold); margin-bottom:10px;">Añadir Saldo</h3>
+    <p style="color:var(--muted); font-size:0.9rem; margin-bottom:20px;">¿Cuánto saldo quieres añadir? (Máximo 10000)</p>
+    <input type="number" id="rechargeAmount" class="live-bet-input" style="width:100%; margin-bottom:15px; box-sizing:border-box;" placeholder="Ej. 100" min="1" max="10000" />
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn-danger" style="padding:10px 16px; border-radius:4px; border:none; color:white; cursor:pointer;" onclick="closeRechargeModal()">Cancelar</button>
+      <button class="btn-save" style="padding:10px 16px; border-radius:4px; border:none; cursor:pointer; background:linear-gradient(135deg,#f5c518,#ff9d00); color:black; font-weight:bold;" onclick="confirmRecharge()">✅ Añadir</button>
+    </div>
+  </div>
+</div>
+
 <script>
   let currentUserUid = null;
   let currentUserEmail = null;
@@ -233,19 +288,46 @@
   // ── AUTH ──────────────────────────────────────────────────────
   async function checkAuth() {
     // Si estem aquí, podem ser 'client' o 'admin', però exigim estar logejats
-    await AUTH.getCurrentUser().then(({ user, role }) => {
+    await AUTH.getCurrentUser().then(async ({ user, role }) => {
       if (!user) {
         window.location.href = 'login.html';
       } else {
         currentUserUid = user.uid;
         currentUserEmail = user.email || 'Usuari Anònim';
         document.getElementById('userEmailTxt').textContent = '👤 ' + currentUserEmail;
+        
+        let bal = await DB.getUserBalance(currentUserUid);
+        if (bal === null) {
+          bal = await DB.updateUserBalance(currentUserUid, 20); // Regalo de bienvenida
+          setTimeout(() => showToast('🎁 ¡Regalo de bienvenida! Has recibido 20€ para apostar.', 'success'), 1000);
+        }
+        
+        const balEl = document.getElementById('userBalanceTxt');
+        balEl.textContent = `💰 ${bal}€`;
+        balEl.onclick = () => {
+          document.getElementById('rechargeAmount').value = '';
+          document.getElementById('rechargeModal').classList.add('open');
+        };
+
         document.getElementById('loadingScreen').style.display = 'none';
         document.getElementById('dashboard').style.display = 'flex';
         renderAll();
       }
     });
   }
+
+  window.closeRechargeModal = () => document.getElementById('rechargeModal').classList.remove('open');
+  window.confirmRecharge = async () => {
+    const input = document.getElementById('rechargeAmount').value;
+    if (!input) return;
+    const amt = parseInt(input);
+    if (isNaN(amt) || amt < 1 || amt > 10000) return showToast('Cantidad inválida. Introduce entre 1 y 10000.', 'error');
+    
+    closeRechargeModal();
+    const newBal = await DB.updateUserBalance(currentUserUid, amt);
+    document.getElementById('userBalanceTxt').textContent = `💰 ${newBal}€`;
+    showToast(`✅ Has añadido ${amt}€ a tu cuenta`, 'success');
+  };
 
   checkAuth();
 
@@ -292,10 +374,126 @@
   }
 
   // ── RENDER ────────────────────────────────────────────────────
+  let activeMatch = null;
+  const CHAMPION_COST = 50;
   async function renderAll() {
     await loadData();
+    activeMatch = await DB.getActiveMatch();
+    await renderLiveBetting();
+    await renderChampionBet();
     renderBetting();
+    await renderUserBracket();
     renderRanking(); // Preload ranking
+  }
+
+  async function renderChampionBet() {
+    const wrap = document.getElementById('championBetWrap');
+    const bets = await DB.getChampionBets();
+    const myBet = bets[currentUserUid];
+
+    if (myBet) {
+      const t = ALL_TEAMS.find(x => x.name === myBet.team);
+      wrap.innerHTML = `<div class="live-bet-card" style="border-color:var(--green); text-align:center;">
+        <div class="live-bet-title" style="color:var(--green); justify-content:center;">✅ Apuesta Registrada</div>
+        <div class="champ-flag" style="font-size:4rem; margin:20px 0;">${t.flag}</div>
+        <h2 style="margin:0; color:var(--text);">${t.name}</h2>
+        <p style="color:var(--muted); margin-top:10px;">Apostaste ${myBet.amount}€. Ganancia potencial: ${myBet.amount * 10}€</p>
+      </div>`;
+      return;
+    }
+
+    let html = `<div class="champion-grid">`;
+    ALL_TEAMS.forEach(t => {
+      html += `<div class="champ-btn" onclick="selectChampion('${t.name}')">
+        <div class="champ-flag">${t.flag}</div>
+        <div class="champ-name">${t.name}</div>
+      </div>`;
+    });
+    html += `</div>`;
+    wrap.innerHTML = html;
+  }
+
+  window.selectChampion = async function(teamName) {
+    if (!confirm(`¿Apostar ${CHAMPION_COST}€ a que ${teamName} gana el Mundial?`)) return;
+    const bal = await DB.getUserBalance(currentUserUid);
+    if (bal < CHAMPION_COST) return showToast('Saldo insuficiente. Haz clic en tu saldo para recargar.', 'error');
+    
+    await DB.updateUserBalance(currentUserUid, -CHAMPION_COST);
+    await DB.placeChampionBet(currentUserUid, teamName, CHAMPION_COST);
+    
+    document.getElementById('userBalanceTxt').textContent = `💰 ${bal - CHAMPION_COST}€`;
+    showToast('✅ Apuesta de campeón confirmada', 'success');
+    renderChampionBet();
+  };
+
+  let selectedLivePrediction = null;
+  async function renderLiveBetting() {
+    const wrap = document.getElementById('liveBettingWrap');
+    if (!activeMatch) {
+      wrap.innerHTML = '';
+      return;
+    }
+    
+    const liveBets = await DB.getLiveBets(activeMatch.id);
+    const myBet = liveBets[currentUserUid];
+
+    if (myBet) {
+      const pText = myBet.prediction === 'team1' ? activeMatch.team1.name : (myBet.prediction === 'team2' ? activeMatch.team2.name : 'Empate');
+      wrap.innerHTML = `<div class="live-bet-card" style="border-color:var(--green)">
+        <div class="live-bet-title" style="color:var(--green)">✅ Apuesta en Vivo Registrada</div>
+        <div class="live-bet-teams">
+          <span>${activeMatch.team1.flag} ${activeMatch.team1.name}</span>
+          <span class="live-bet-vs">VS</span>
+          <span>${activeMatch.team2.name} ${activeMatch.team2.flag}</span>
+        </div>
+        <p style="text-align:center; color:var(--text); font-weight:700;">Apostaste <strong style="color:var(--gold)">${myBet.amount}€</strong> a: ${pText}</p>
+        <p style="text-align:center; color:var(--muted); font-size:0.85rem; margin-top:8px;">Cuota: x2.00. Ganancia potencial: ${myBet.amount * 2}€</p>
+      </div>`;
+      return;
+    }
+
+    selectedLivePrediction = null;
+    wrap.innerHTML = `<div class="live-bet-card">
+      <div class="live-bet-title">🔴 Partido en Curso (Cuota x2.00)</div>
+      <div class="live-bet-teams">
+        <span>${activeMatch.team1.flag} ${activeMatch.team1.name}</span>
+        <span class="live-bet-vs">VS</span>
+        <span>${activeMatch.team2.name} ${activeMatch.team2.flag}</span>
+      </div>
+      <div class="live-bet-options">
+        <button class="lbo-btn" onclick="selectLiveBet('team1', this)">1 (${activeMatch.team1.abbr})</button>
+        <button class="lbo-btn" onclick="selectLiveBet('draw', this)">X (Empate)</button>
+        <button class="lbo-btn" onclick="selectLiveBet('team2', this)">2 (${activeMatch.team2.abbr})</button>
+      </div>
+      <div class="live-bet-action">
+        <input type="number" id="liveBetAmount" class="live-bet-input" placeholder="Cantidad (€)" min="1" />
+        <button class="live-bet-submit" id="btnSubmitLiveBet" disabled>Apostar</button>
+      </div>
+    </div>`;
+
+    document.getElementById('btnSubmitLiveBet').onclick = async () => {
+      const amt = parseInt(document.getElementById('liveBetAmount').value);
+      if (!amt || amt <= 0) return showToast('Introduce una cantidad válida', 'error');
+      if (!selectedLivePrediction) return showToast('Selecciona un resultado', 'error');
+      
+      const bal = await DB.getUserBalance(currentUserUid);
+      if (bal < amt) return showToast('Saldo insuficiente', 'error');
+
+      // Deduct balance & save bet
+      await DB.updateUserBalance(currentUserUid, -amt);
+      await DB.placeLiveBet(currentUserUid, activeMatch.id, amt, selectedLivePrediction);
+      
+      document.getElementById('userBalanceTxt').textContent = `💰 ${bal - amt}€`;
+      showToast('✅ Apuesta confirmada', 'success');
+      renderLiveBetting(); // Re-render to show success state
+    };
+  }
+
+  window.selectLiveBet = function(pred, btn) {
+    selectedLivePrediction = pred;
+    document.querySelectorAll('.lbo-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    document.getElementById('btnSubmitLiveBet').disabled = false;
   }
 
   async function renderBetting() {
@@ -370,6 +568,92 @@
     
     btn.disabled = false;
     btn.textContent = '💾 Guardar Totes les Prediccions';
+  };
+
+  async function renderUserBracket() {
+    const bracket = await DB.getTournamentBracket();
+    const title = document.getElementById('tourBracketTitle');
+    const wrap = document.getElementById('tourBracketWrap');
+    
+    if (!bracket) {
+      title.style.display = 'none';
+      wrap.innerHTML = '';
+      return;
+    }
+    
+    const bracketBetsData = await DB.getBracketBets();
+    const myBracketBets = bracketBetsData[currentUserUid] || {};
+
+    title.style.display = 'block';
+    let html = '';
+    
+    const renderRound = (matches, roundTitle) => {
+      if (!matches || matches.length === 0) return '';
+      let res = `<div style="background:rgba(0,0,0,0.2); padding:16px; border-radius:var(--radius); border:1px solid var(--border);">
+        <h4 style="color:var(--gold); margin-bottom:12px;">${roundTitle}</h4>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:10px;">`;
+      matches.forEach(m => {
+        if (!m) return;
+        const t1 = m.team1 ? `${m.team1.flag} ${m.team1.name}` : 'TBD';
+        const t2 = m.team2 ? `${m.team2.flag} ${m.team2.name}` : 'TBD';
+        const isT1Win = m.winner && m.winner.name === m.team1?.name;
+        const isT2Win = m.winner && m.winner.name === m.team2?.name;
+        
+        let betHtml = '';
+        if (m.team1 && m.team2) {
+          const myBet = myBracketBets[m.id];
+          if (myBet) {
+             const pText = myBet.prediction === m.team1.name ? m.team1.name : m.team2.name;
+             betHtml = `<div style="margin-top:10px; font-size:0.8rem; color:var(--green); text-align:center; padding-top:8px; border-top:1px solid rgba(255,255,255,0.05);">
+               ✅ Apostaste <strong>${myBet.amount}€</strong> a ${pText}
+             </div>`;
+          } else if (!m.winner) {
+             betHtml = `<div style="margin-top:10px; display:flex; gap:6px; flex-direction:column; padding-top:8px; border-top:1px solid rgba(255,255,255,0.05);">
+               <div style="display:flex; gap:6px;">
+                 <input type="number" id="amt_${m.id}" placeholder="€" style="width:60px; padding:6px; border-radius:4px; border:1px solid var(--border); background:rgba(0,0,0,0.3); color:var(--gold);" min="1">
+                 <button onclick="placeBracketBet('${m.id}', '${m.team1.name}')" style="flex:1; background:rgba(255,255,255,0.1); border:none; color:var(--text); border-radius:4px; cursor:pointer;">1</button>
+                 <button onclick="placeBracketBet('${m.id}', '${m.team2.name}')" style="flex:1; background:rgba(255,255,255,0.1); border:none; color:var(--text); border-radius:4px; cursor:pointer;">2</button>
+               </div>
+             </div>`;
+          }
+        }
+
+        res += `<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:var(--radius-sm); border:1px solid ${m.winner ? 'var(--green)' : 'var(--border)'};">
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <span style="font-weight:800; ${isT1Win ? 'color:var(--green)' : ''}">${t1}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="font-weight:800; ${isT2Win ? 'color:var(--green)' : ''}">${t2}</span>
+          </div>
+          ${betHtml}
+        </div>`;
+      });
+      res += `</div></div>`;
+      return res;
+    };
+
+    html += renderRound(bracket.roundOf16, 'Octavos de Final');
+    html += renderRound(bracket.quarterFinals, 'Cuartos de Final');
+    html += renderRound(bracket.semiFinals, 'Semifinales');
+    html += renderRound(bracket.final ? [bracket.final[0]] : bracket.final, 'Final');
+
+    wrap.innerHTML = html;
+  }
+
+  window.placeBracketBet = async function(matchId, teamName) {
+    const input = document.getElementById('amt_' + matchId);
+    const amt = parseInt(input.value);
+    if (!amt || amt <= 0) return showToast('Introduce una cantidad válida', 'error');
+    
+    const bal = await DB.getUserBalance(currentUserUid);
+    if (bal < amt) return showToast('Saldo insuficiente', 'error');
+
+    await DB.updateUserBalance(currentUserUid, -amt);
+    await DB.placeBracketBet(currentUserUid, matchId, amt, teamName);
+    
+    document.getElementById('userBalanceTxt').textContent = `💰 ${bal - amt}€`;
+    showToast('✅ Apuesta confirmada en el torneo', 'success');
+    renderUserBracket();
   };
 
   // ── RÀNQUING ──────────────────────────────────────────────────
