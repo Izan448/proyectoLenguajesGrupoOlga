@@ -18,6 +18,7 @@
 
   <script src="firebase-config.js"></script>
   <script src="auth.js"></script>
+  <script src="i18n.js"></script>
 
   <script>
     window.addEventListener('DOMContentLoaded', async () => {
@@ -35,9 +36,13 @@
 
   <!-- Back link bar -->
   <div class="back-link-bar">
-    <a href="index.html" class="back-link" id="backLink" aria-label="Tornar al reglament">← Reglament</a>
-    <a href="tournament.html" class="back-link" id="navTournament" style="margin-left:8px">🏆 Classificació</a>
-    <a href="admin.html" class="back-link" id="navAdmin" style="margin-left:8px">🔐 Admin</a>
+    <select class="lang-selector" aria-label="Idioma" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); border-radius: 99px; color: var(--text); padding: 4px 12px; outline: none; cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 0.78rem; font-weight: 700; margin-right: 12px;">
+        <option value="ca">VAL</option>
+        <option value="es" style="color: black;">ESP</option>
+    </select>
+    <a href="index.html" class="back-link" id="backLink" aria-label="Tornar al reglament" data-i18n="nav_back_reg">← Reglament</a>
+    <a href="tournament.html" class="back-link" id="navTournament" style="margin-left:8px" data-i18n="nav_tour">🏆 Classificació</a>
+    <a href="admin.html" class="back-link" id="navAdmin" style="margin-left:8px" data-i18n="nav_login">🔐 Admin</a>
   </div>
 
   <!-- ====================== LOBBY SCREEN ====================== -->
@@ -48,9 +53,9 @@
     </div>
     <div class="lobby-container">
       <div class="lobby-header">
-        <div class="lobby-badge">⚽ MUNDIAL 2026 · CHAPAS</div>
-        <h1 class="lobby-title">Chapas del<br /><span class="lobby-title-gold">Mundial</span></h1>
-        <p class="lobby-subtitle">Selecciona els equips, tira les fitxes i marca el gol!</p>
+        <div class="lobby-badge" data-i18n="lobby_badge">⚽ MUNDIAL 2026 · CHAPAS</div>
+        <h1 class="lobby-title" data-i18n="lobby_title">Chapas del<br /><span class="lobby-title-gold">Mundial</span></h1>
+        <p class="lobby-subtitle" data-i18n="lobby_subtitle">Selecciona els equips, tira les fitxes i marca el gol!</p>
         <p id="teamsRemainingInfo" style="font-size:0.75rem;color:#fb923c;margin-top:6px;min-height:18px"></p>
       </div>
 
@@ -58,10 +63,10 @@
         <!-- Player 1 -->
         <div class="player-panel" id="panel1">
           <div class="player-label" style="color:#60a5fa">
-            <span class="pdot" style="background:#60a5fa"></span> Jugador 1
+            <span class="pdot" style="background:#60a5fa"></span> <span data-i18n="lobby_player_1">Jugador 1</span>
           </div>
           <div class="selected-team-display" id="sel1">
-            <span class="sel-placeholder">Tria el teu equip</span>
+            <span class="sel-placeholder" data-i18n="lobby_pick_team">Tria el teu equip</span>
           </div>
           <div class="teams-grid" id="grid1" role="listbox" aria-label="Equips per al Jugador 1"></div>
         </div>
@@ -70,7 +75,7 @@
         <div class="vs-column">
           <div class="vs-badge">VS</div>
           <div class="match-settings-box">
-            <p class="setting-title">Gols per guanyar</p>
+            <p class="setting-title" data-i18n="lobby_goals_win">Gols per guanyar</p>
             <div class="goal-stepper">
               <button class="step-btn" id="goalDown" aria-label="Reduir gols">−</button>
               <span id="goalCount" class="goal-num">5</span>
@@ -78,7 +83,7 @@
             </div>
           </div>
           <div class="match-settings-box">
-            <p class="setting-title">Fitxes per equip</p>
+            <p class="setting-title" data-i18n="lobby_tokens_team">Fitxes per equip</p>
             <div class="goal-stepper">
               <button class="step-btn" id="tokDown" aria-label="Menys fitxes">−</button>
               <span id="tokCount" class="goal-num">4</span>
@@ -86,16 +91,16 @@
             </div>
           </div>
           <button id="startBtn" class="start-btn" disabled aria-disabled="true">
-            <span class="start-ball">⚽</span> Crear Partit
+            <span class="start-ball">⚽</span> <span data-i18n="lobby_btn_start">Crear Partit</span>
           </button>
-          <p class="hint-text">Arrossega les fitxes com una fona per llançar-les!</p>
+          <p class="hint-text" data-i18n="lobby_hint">Arrossega les fitxes com una fona per llançar-les!</p>
           <p id="dbModeInfo" style="font-size:0.68rem;color:#60a5fa;margin-top:4px"></p>
         </div>
 
         <!-- Player 2 -->
         <div class="player-panel" id="panel2">
           <div class="player-label" style="color:#fb923c">
-            <span class="pdot" style="background:#fb923c"></span> Jugador 2
+            <span class="pdot" style="background:#fb923c"></span> <span data-i18n="lobby_player_2">Jugador 2</span>
           </div>
           <div class="selected-team-display" id="sel2">
             <span class="sel-placeholder">Tria el teu equip</span>
@@ -112,8 +117,8 @@
       <div class="handoff-icon" id="handoffIcon">⚽</div>
       <p class="handoff-player" id="handoffPlayer">Jugador 1</p>
       <p class="handoff-team" id="handoffTeam">Brasil 🇧🇷</p>
-      <p class="handoff-instruction">Passa el dispositiu al teu rival!</p>
-      <button id="handoffContinue" class="continue-btn">▶ Continuar</button>
+      <p class="handoff-instruction" data-i18n="game_handoff">Passa el dispositiu al teu rival!</p>
+      <button id="handoffContinue" class="continue-btn" data-i18n="btn_continue">▶ Continuar</button>
     </div>
   </div>
 
@@ -131,9 +136,9 @@
       <div class="hud-center">
         <div class="turn-indicator" id="turnIndicator">
           <span class="turn-dot" id="turnDot"></span>
-          <span id="turnText">Torn J1</span>
+          <span id="turnText" data-i18n="game_turn_j1">Torn J1</span>
         </div>
-        <div class="phase-text" id="phaseText">Selecciona una fitxa</div>
+        <div class="phase-text" id="phaseText" data-i18n="game_phase_select">Selecciona una fitxa</div>
         <div class="win-goal-text" id="winGoalText">Primer a 5 gols guanya</div>
       </div>
       <div class="hud-side hud-right">
@@ -152,9 +157,9 @@
 
     <!-- Bottom controls -->
     <div class="game-controls" role="toolbar">
-      <button id="menuBtn" class="gc-btn">🏠 Menú</button>
-      <div class="gc-instructions" id="gcInstr">Clic i arrossega la teua fitxa per llançar-la</div>
-      <button id="skipBtn" class="gc-btn gc-btn-warn">⏭ Passar torn</button>
+      <button id="menuBtn" class="gc-btn" data-i18n="btn_menu">🏠 Menú</button>
+      <div class="gc-instructions" id="gcInstr" data-i18n="game_instr">Clic i arrossega la teua fitxa per llançar-la</div>
+      <button id="skipBtn" class="gc-btn gc-btn-warn" data-i18n="game_btn_skip">⏭ Passar torn</button>
     </div>
   </div>
 
@@ -172,16 +177,16 @@
   <div id="gameoverScreen" class="overlay-screen" style="display:none" role="main">
     <div class="gameover-box">
       <div class="go-trophy">🏆</div>
-      <h2 class="go-title">Fi del Partit!</h2>
+      <h2 class="go-title" data-i18n="game_over_title">Fi del Partit!</h2>
       <div class="go-winner" id="goWinner">Brasil guanya!</div>
       <div class="go-score" id="goScore">5 – 3</div>
       <div class="go-both-flags" id="goBothFlags"></div>
       <div class="go-buttons">
-        <button id="replayBtn" class="btn-replay">🔄 Revanxa</button>
-        <button id="backLobbyBtn" class="btn-lobby">🏠 Menú</button>
+        <button id="replayBtn" class="btn-replay" data-i18n="btn_replay">🔄 Revanxa</button>
+        <button id="backLobbyBtn" class="btn-lobby" data-i18n="btn_menu">🏠 Menú</button>
         <a href="tournament.html" class="btn-replay"
-          style="background:linear-gradient(135deg,#60a5fa,#7c3aed);color:#fff">🏆 Classificació</a>
-        <a href="index.html" class="btn-reg">📋 Reglament</a>
+          style="background:linear-gradient(135deg,#60a5fa,#7c3aed);color:#fff" data-i18n="nav_tour">🏆 Classificació</a>
+        <a href="index.html" class="btn-reg" data-i18n="idx_badge">📋 Reglament</a>
       </div>
     </div>
   </div>

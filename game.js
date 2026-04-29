@@ -189,7 +189,7 @@ function buildLobby() {
   });
   
   const infoEl = document.getElementById('teamsRemainingInfo');
-  if (infoEl) infoEl.textContent = 'Selecciona els teus equips i a jugar!';
+  if (infoEl) infoEl.textContent = t('lobby_subtitle');
 }
 
 function selectTeam(panelIdx, teamIdx) {
@@ -271,7 +271,7 @@ function startMatch() {
 
   buildTokens();
   updateHUD();
-  document.getElementById('winGoalText').textContent = `Primer a ${WIN_SCORE} gols guanya`;
+  document.getElementById('winGoalText').textContent = t('game_first_to').replace('{n}', WIN_SCORE);
   showHandoff(false); // Show who starts without "pass device" instruction
 }
 
@@ -537,9 +537,9 @@ function resetPositions() {
 function endGame() {
   state = 'GAMEOVER';
   const w = score[0] >= WIN_SCORE ? 0 : 1;
-  const t = TEAMS[selectedTeams[w]];
+  const t_win = TEAMS[selectedTeams[w]];
 
-  document.getElementById('goWinner').textContent    = `${t.flag} ${t.name} guanya!`;
+  document.getElementById('goWinner').textContent    = `${t_win.flag} ${t_win.name} ${t('game_win_text')}`;
   document.getElementById('goScore').textContent     = `${score[0]} – ${score[1]}`;
   document.getElementById('goBothFlags').textContent = `${TEAMS[selectedTeams[0]].flag}  ${TEAMS[selectedTeams[1]].flag}`;
   document.getElementById('gameoverScreen').style.display = 'flex';
@@ -573,9 +573,9 @@ function showHandoff(passDevice) {
   const team = TEAMS[selectedTeams[currentPlayer]];
   const pn   = currentPlayer + 1;
   document.getElementById('handoffIcon').textContent       = team.flag;
-  document.getElementById('handoffPlayer').textContent     = `Jugador ${pn}`;
+  document.getElementById('handoffPlayer').textContent     = `${t('lobby_player_1').split(' ')[0]} ${pn}`;
   document.getElementById('handoffTeam').textContent       = team.name;
-  document.getElementById('handoffContinue').textContent   = passDevice ? '▶ Soc el Jugador ' + pn + ', Continuar!' : '▶ Iniciar Partit!';
+  document.getElementById('handoffContinue').textContent   = passDevice ? `${t('btn_continue')} (J${pn})` : t('lobby_btn_start');
   const instruction = document.querySelector('.handoff-instruction');
   instruction.style.display = passDevice ? 'block' : 'none';
   document.getElementById('handoffScreen').style.display   = 'flex';
@@ -608,7 +608,7 @@ function updateTurnUI() {
   const pcolor = currentPlayer === 0 ? '#60a5fa' : '#fb923c';
   dot.style.background = pcolor;
   document.getElementById('turnIndicator').style.borderColor = pcolor + '50';
-  txt.textContent = `Torn J${currentPlayer + 1}`;
+  txt.textContent = `${t('game_turn_j1').split(' ')[0]} J${currentPlayer + 1}`;
 }
 
 // ─── SCREEN SWITCH ────────────────────────────────────────────

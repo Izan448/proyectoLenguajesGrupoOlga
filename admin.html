@@ -16,6 +16,7 @@
   <script src="firebase-config.js?v=5"></script>
   <script src="auth.js?v=5"></script>
   <script src="db.js?v=5"></script>
+  <script src="i18n.js"></script>
   <script>
     // AUTO-ACCEPT CONFIRMS FOR AUTOMATED TESTING
     window.confirm = function (msg) { console.log('Auto-confirm: ' + msg); return true; };
@@ -132,6 +133,7 @@
       gap: 8px;
       margin-left: auto;
       padding: 8px 0;
+      align-items: center;
     }
 
     .hd-link {
@@ -843,19 +845,23 @@
   <!-- ── DASHBOARD ── -->
   <div id="dashboard">
     <div class="admin-topbar">
-      <div class="admin-brand">🔐 Admin Chapas 2026</div>
+      <div class="admin-brand" data-i18n="admin_brand_2">🔐 Admin Chapas 2026</div>
       <div class="admin-tabs">
-        <button class="tab-btn active" data-tab="partits">📋 Partits</button>
-        <button class="tab-btn" data-tab="classificacio">🏆 Classificació</button>
-        <button class="tab-btn" data-tab="torneig">🌍 Torneig Mundial</button>
-        <button class="tab-btn" data-tab="equips">👥 Equips</button>
-        <button class="tab-btn" data-tab="usuaris">👥 Usuaris</button>
-        <button class="tab-btn" data-tab="config">⚙️ Configuració</button>
+        <button class="tab-btn active" data-tab="partits" data-i18n="admin_tab_matches_2">📋 Partits</button>
+        <button class="tab-btn" data-tab="classificacio" data-i18n="admin_tab_class_2">🏆 Classificació</button>
+        <button class="tab-btn" data-tab="torneig" data-i18n="admin_tab_tour_2">🌍 Torneig Mundial</button>
+        <button class="tab-btn" data-tab="equips" data-i18n="admin_tab_teams">🛡️ Equips</button>
+        <button class="tab-btn" data-tab="usuaris" data-i18n="admin_tab_users_2">👥 Usuaris</button>
+        <button class="tab-btn" data-tab="config" data-i18n="admin_tab_config">⚙️ Configuració</button>
       </div>
       <div class="admin-actions">
-        <a href="tournament.html" class="hd-link">🏆 Pública</a>
-        <a href="game.html" class="hd-link">⚽ Joc</a>
-        <button class="logout-btn" id="logoutBtn">Tancar sessió</button>
+        <select class="lang-selector" aria-label="Idioma" style="background: rgba(255,255,255,0.1); border: 1px solid var(--border); border-radius: 99px; color: var(--text); padding: 4px 12px; outline: none; cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 0.78rem; font-weight: 700; margin-right: 8px;">
+            <option value="ca">VAL</option>
+            <option value="es" style="color: black;">ESP</option>
+        </select>
+        <a href="index.html" class="hd-link" data-i18n="admin_link_pub">🏆 Pública</a>
+        <a href="game.html" class="hd-link" data-i18n="admin_link_game">⚽ Joc</a>
+        <button class="logout-btn" id="logoutBtn" data-i18n="logout">Tancar sessió</button>
       </div>
     </div>
 
@@ -867,7 +873,7 @@
 
         <!-- Live Match (Partido en Curso) -->
         <div class="add-match-form" style="border-color:var(--gold)">
-          <div class="aform-title" style="color:var(--gold)">🔴 Partido en Curso (Apuestas en Vivo)</div>
+          <div class="aform-title" style="color:var(--gold)" data-i18n="admin_live_match">🔴 Partit en Curs (Apostes en Viu)</div>
           <div id="activeMatchWrap">
             <!-- Rendered via JS -->
           </div>
@@ -875,122 +881,117 @@
 
         <!-- Add manual match -->
         <div class="add-match-form">
-          <div class="aform-title">➕ Afegir Resultat Manualment</div>
+          <div class="aform-title" data-i18n="admin_add_manual">➕ Afegir Resultat Manualment</div>
           <div class="aform-row">
             <select class="aform-select" id="addTeam1"></select>
             <input type="number" class="aform-score" id="addScore1" value="0" min="0" max="99" />
             <span class="aform-sep">–</span>
             <input type="number" class="aform-score" id="addScore2" value="0" min="0" max="99" />
             <select class="aform-select" id="addTeam2"></select>
-            <button class="btn-add-match" id="addMatchBtn">✅ Afegir</button>
+            <button class="btn-add-match" id="addMatchBtn" data-i18n="admin_btn_add">✅ Afegir</button>
           </div>
         </div>
 
-        <div class="panel-title">📋 Partits Jugats</div>
+        <div class="panel-title" data-i18n="admin_played_matches">📋 Partits Jugats</div>
         <div id="matchAdminList"></div>
       </div>
 
       <!-- ── TAB: CLASSIFICACIÓ ── -->
       <div class="tab-panel" id="tab-classificacio">
-        <div class="panel-title">🏆 Taula de Classificació</div>
+        <div class="panel-title" data-i18n="admin_standings">🏆 Taula de Classificació</div>
         <div class="table-wrap" id="adminStandingsWrap">
           <div class="empty-state">
             <div class="empty-icon">📋</div>
-            <div class="empty-text">Encara no hi ha dades</div>
+            <div class="empty-text" data-i18n="admin_empty_data">Encara no hi ha dades</div>
           </div>
         </div>
       </div>
 
       <!-- ── TAB: TORNEIG ── -->
       <div class="tab-panel" id="tab-torneig">
-        <div class="panel-title">🌍 Torneig Mundial (32 Equips)</div>
+        <div class="panel-title" data-i18n="admin_tour_title">🌍 Torneig Mundial (32 Equips)</div>
 
         <div class="danger-zone" style="background:rgba(245,197,24,0.05); border-color:rgba(245,197,24,0.2);">
-          <div class="danger-title" style="color:var(--gold);">🛠️ Creador de Tornejos</div>
+          <div class="danger-title" style="color:var(--gold);" data-i18n="admin_tour_creator">🛠️ Creador de Tornejos</div>
           <div class="danger-action" style="border-bottom:none; padding-bottom:0;">
             <div class="danger-action-info">
-              <h4 style="color:var(--text);">Estat: <span id="tourSelectedCount">0</span>/32 equips seleccionats</h4>
-              <p>Selecciona manualment o genera aleatòriament els equips participants.</p>
+              <h4 style="color:var(--text);"><span data-i18n="admin_stats_status">Estat</span>: <span id="tourSelectedCount">0</span>/32 <span data-i18n="admin_stats_teams">equips</span> <span data-i18n="admin_stats_selected">seleccionats</span></h4>
+              <p data-i18n="admin_tour_creator_desc">Selecciona manualment o genera aleatòriament els equips participants.</p>
             </div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;">
               <button class="btn-danger"
                 style="background:rgba(96,165,250,0.12); color:var(--blue); border-color:rgba(96,165,250,0.3);"
-                id="btnTourRandom">🎲 Aleatori</button>
-              <button class="btn-save" id="btnTourGenerate" style="opacity:0.5; pointer-events:none;">⚽ Sortear
-                Grups</button>
+                id="btnTourRandom" data-i18n="admin_btn_random">🎲 Aleatori</button>
+              <button class="btn-save" id="btnTourGenerate" style="opacity:0.5; pointer-events:none;" data-i18n="admin_btn_draw">⚽ Sortejar Grups</button>
             </div>
           </div>
         </div>
 
         <div class="teams-admin-grid" id="tourTeamsGrid"></div>
 
-        <div class="panel-title" style="margin-top:30px; display:none;" id="tourActiveTitle">🏆 Grups del Torneig Actual
-        </div>
+        <div class="panel-title" style="margin-top:30px; display:none;" id="tourActiveTitle" data-i18n="admin_tour_active_title">🏆 Grups del Torneig Actual</div>
         <div id="tourActiveGroups"
           style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;"></div>
 
-        <div class="panel-title" style="margin-top:40px; display:none;" id="tourBracketTitle">⚔️ Fase Eliminatoria
-          (Bracket)</div>
+        <div class="panel-title" style="margin-top:40px; display:none;" id="tourBracketTitle" data-i18n="admin_tour_bracket_title">⚔️ Fase Eliminatòria (Bracket)</div>
         <button class="btn-save" id="btnTourGenerateBracket"
-          style="display:none; margin-bottom:20px; background:linear-gradient(135deg,var(--red),#ff6b6b)">⚔️ Generar
-          Cuadro (Octavos)</button>
+          style="display:none; margin-bottom:20px; background:linear-gradient(135deg,var(--red),#ff6b6b)" data-i18n="admin_btn_generate_bracket">⚔️ Generar Quadre (Vuitens)</button>
         <div id="tourBracketWrap" style="display:flex; flex-direction:column; gap:20px;"></div>
       </div>
 
       <!-- ── TAB: EQUIPS ── -->
       <div class="tab-panel" id="tab-equips">
-        <div class="panel-title">👥 Gestió d'Equips <span style="font-size:0.8rem;color:var(--muted);font-weight:400">—
-            Reinicia l'estat "jugat" d'un equip perquè pugui tornar a participar</span></div>
+        <div class="panel-title" data-i18n="admin_panel_title_teams">👥 Gestió d'Equips i Torneig</div>
+        <p style="font-size:0.8rem;color:var(--muted);font-weight:400;margin-bottom:12px;" data-i18n="admin_teams_desc">— Reinicia l'estat "jugat" d'un equip perquè pugui tornar a participar</p>
         <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn-reset-team" id="resetAllTeamsBtn"
-            style="background:rgba(96,165,250,0.1);color:var(--blue);border-color:rgba(96,165,250,0.25)">🔄 Reiniciar
-            tots els equips</button>
+            style="background:rgba(96,165,250,0.1);color:var(--blue);border-color:rgba(96,165,250,0.25)" data-i18n="admin_btn_reset_teams">🔄 Reiniciar tots els equips</button>
         </div>
         <div class="teams-admin-grid" id="teamsAdminGrid"></div>
       </div>
 
       <!-- ── TAB: USUARIS ── -->
       <div class="tab-panel" id="tab-usuaris">
-        <div class="panel-title">👥 Gestió d'Usuaris</div>
+        <div class="panel-title" data-i18n="admin_users_title">👥 Gestió d'Usuaris</div>
         <div class="table-wrap" id="adminUsersWrap">
           <div class="empty-state">
             <div class="empty-icon">👥</div>
-            <div class="empty-text">Carregant usuaris...</div>
+            <div class="empty-text" data-i18n="admin_users_loading">Carregant usuaris...</div>
           </div>
         </div>
       </div>
 
       <!-- ── TAB: CONFIG ── -->
       <div class="tab-panel" id="tab-config">
-        <div class="panel-title">⚙️ Configuració del Torneig</div>
+        <div class="panel-title" data-i18n="admin_config_title">⚙️ Configuració del Torneig</div>
 
         <div class="danger-zone">
-          <div class="danger-title">⚠️ Zona Perillosa</div>
+          <div class="danger-title" data-i18n="admin_danger_zone">⚠️ Zona Perillosa</div>
           <div class="danger-action">
             <div class="danger-action-info">
-              <h4>Reiniciar equips jugats</h4>
-              <p>Permet que tots els equips puguin tornar a ser seleccionats.</p>
+              <h4 data-i18n="admin_reset_teams_title">Reiniciar equips jugats</h4>
+              <p data-i18n="admin_reset_teams_desc">Permet que tots els equips puguin tornar a ser seleccionats.</p>
             </div>
-            <button class="btn-danger" id="cfgResetTeams">🔄 Reiniciar equips</button>
+            <button class="btn-danger" id="cfgResetTeams" data-i18n="admin_btn_reset_teams_2">🔄 Reiniciar equips</button>
           </div>
           <div class="danger-action">
             <div class="danger-action-info">
-              <h4>Esborrar tots els partits</h4>
-              <p>Esborra l'historial de partits però manté els equips jugats.</p>
+              <h4 data-i18n="admin_clear_matches_title">Esborrar tots els partits</h4>
+              <p data-i18n="admin_clear_matches_desc">Esborra l'historial de partits però manté els equips jugats.</p>
             </div>
-            <button class="btn-danger" id="cfgClearMatches">🗑️ Esborrar partits</button>
+            <button class="btn-danger" id="cfgClearMatches" data-i18n="admin_btn_clear_matches">🗑️ Esborrar partits</button>
           </div>
           <div class="danger-action">
             <div class="danger-action-info">
-              <h4>Reiniciar tot el torneig</h4>
-              <p>Esborra partits i reinicia tots els equips. Comença de zero.</p>
+              <h4 data-i18n="admin_reset_tour_title">Reiniciar tot el torneig</h4>
+              <p data-i18n="admin_reset_tour_desc">Esborra partits i reinicia tots els equips. Comença de zero.</p>
             </div>
-            <button class="btn-danger" id="cfgResetAll">💥 Reiniciar tot</button>
+            <button class="btn-danger" id="cfgResetAll" data-i18n="admin_btn_reset_all">💥 Reiniciar tot</button>
           </div>
         </div>
 
         <div class="add-match-form" style="margin-bottom:20px;">
-          <div class="aform-title" style="color:var(--blue)">✈️ Configuració de Telegram</div>
+          <div class="aform-title" style="color:var(--blue)" data-i18n="admin_tg_title">✈️ Configuració de Telegram</div>
           <div style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;">
             Configura el Bot de Telegram per enviar automàticament els resultats dels partits finalitzats i generar el
             codi QR públic.
@@ -1227,11 +1228,11 @@
       const played = await getPlayed();
       const goals = matches.reduce((s, m) => s + m.score1 + m.score2, 0);
       document.getElementById('statsRow').innerHTML = `
-      <div class="stat-mini"><div class="stat-mini-val">${matches.length}</div><div class="stat-mini-lbl">Partits</div></div>
-      <div class="stat-mini"><div class="stat-mini-val">${played.length}</div><div class="stat-mini-lbl">Equips Jugats</div></div>
-      <div class="stat-mini"><div class="stat-mini-val">${ALL_TEAMS.length - played.length}</div><div class="stat-mini-lbl">Disponibles</div></div>
-      <div class="stat-mini"><div class="stat-mini-val">${goals}</div><div class="stat-mini-lbl">Gols Totals</div></div>
-      <div class="stat-mini"><div class="stat-mini-val" style="color:${window.ONLINE_MODE ? '#4ade80' : '#fb923c'}">${window.ONLINE_MODE ? '🌐' : '💾'}</div><div class="stat-mini-lbl">${window.ONLINE_MODE ? 'Firebase Online' : 'Mode Local'}</div></div>
+      <div class="stat-mini"><div class="stat-mini-val">${matches.length}</div><div class="stat-mini-lbl">${t('admin_stats_matches')}</div></div>
+      <div class="stat-mini"><div class="stat-mini-val">${played.length}</div><div class="stat-mini-lbl">${t('admin_stats_played')}</div></div>
+      <div class="stat-mini"><div class="stat-mini-val">${ALL_TEAMS.length - played.length}</div><div class="stat-mini-lbl">${t('admin_stats_avail')}</div></div>
+      <div class="stat-mini"><div class="stat-mini-val">${goals}</div><div class="stat-mini-lbl">${t('admin_stats_goals')}</div></div>
+      <div class="stat-mini"><div class="stat-mini-val" style="color:${window.ONLINE_MODE ? '#4ade80' : '#fb923c'}">${window.ONLINE_MODE ? '🌐' : '💾'}</div><div class="stat-mini-lbl">${window.ONLINE_MODE ? t('admin_stats_firebase') : t('admin_stats_local')}</div></div>
     `;
     }
 
@@ -1240,7 +1241,7 @@
       const matches = await getMatches();
       const el = document.getElementById('matchAdminList');
       if (matches.length === 0) {
-        el.innerHTML = '<div class="empty-state"><div class="empty-icon">⚽</div><div class="empty-text">No hi ha partits registrats</div></div>';
+        el.innerHTML = `<div class="empty-state"><div class="empty-icon">⚽</div><div class="empty-text">${t('admin_no_matches_found')}</div></div>`;
         return;
       }
       const reversed = [...matches].reverse();

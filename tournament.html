@@ -18,6 +18,7 @@
   <script src="auth.js"></script>
   <script src="db.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="i18n.js"></script>
   <style>
     :root {
       --dark: #070c18;
@@ -435,18 +436,22 @@
     <div class="hd-brand">
       <span class="hd-icon">🏆</span>
       <div>
-        <div class="hd-title">Classificació <span></span></div>
-        <div class="last-update" id="lastUpdate">Carregant...</div>
+        <div class="hd-title" data-i18n="tour_title">Classificació Oficial</div>
+        <div class="last-update" id="lastUpdate" data-i18n="loading">Carregant...</div>
       </div>
     </div>
     <div class="hd-links">
+      <select class="lang-selector" aria-label="Idioma" style="background: rgba(255,255,255,0.1); border: 1px solid var(--border); border-radius: 99px; color: var(--text); padding: 4px 12px; outline: none; cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 0.78rem; font-weight: 700;">
+          <option value="ca">VAL</option>
+          <option value="es" style="color: black;">ESP</option>
+      </select>
       <span id="onlineBadge"
         style="font-size:0.72rem;padding:5px 10px;border-radius:99px;border:1px solid rgba(74,222,128,0.3);background:rgba(74,222,128,0.08);color:#4ade80"></span>
-      <button onclick="render()" class="hd-link" style="cursor:pointer">🔄 Refrescar</button>
-      <a href="game.html" class="hd-link">⚽ Jugar</a>
-      <a href="tournament.html" class="hd-link active">🏆 Classificació</a>
-      <a href="admin.html" class="hd-link">🔐 Admin</a>
-      <a href="index.html" class="hd-link">📋 Reglament</a>
+      <button onclick="render()" class="hd-link" style="cursor:pointer" data-i18n="admin_btn_reset_teams_2">🔄 Refrescar</button>
+      <a href="game.html" class="hd-link" data-i18n="nav_play">⚽ Jugar</a>
+      <a href="tournament.html" class="hd-link active" data-i18n="nav_tour">🏆 Classificació</a>
+      <a href="admin.html" class="hd-link" data-i18n="nav_login">🔐 Admin</a>
+      <a href="index.html" class="hd-link" data-i18n="idx_badge">📋 Reglament</a>
     </div>
   </header>
 
@@ -455,19 +460,19 @@
     <div class="stats-banner">
       <div class="stat-card">
         <div class="stat-val" id="statMatches">0</div>
-        <div class="stat-lbl">Partits Jugats</div>
+        <div class="stat-lbl" data-i18n="admin_stats_matches">Partits Jugats</div>
       </div>
       <div class="stat-card">
         <div class="stat-val" id="statTeams">0</div>
-        <div class="stat-lbl">Equips Participants</div>
+        <div class="stat-lbl" data-i18n="idx_stat_teams">Equips Participants</div>
       </div>
       <div class="stat-card">
         <div class="stat-val" id="statGoals">0</div>
-        <div class="stat-lbl">Gols Totals</div>
+        <div class="stat-lbl" data-i18n="admin_stats_goals">Gols Totals</div>
       </div>
       <div class="stat-card">
         <div class="stat-val" id="statAvg">–</div>
-        <div class="stat-lbl">Mitja Gols/Partit</div>
+        <div class="stat-lbl" data-i18n="tour_avg_goals">Mitja Gols/Partit</div>
       </div>
     </div>
 
@@ -476,16 +481,16 @@
       <div>
         <h3 style="font-size:1.4rem; font-weight:900; margin-bottom:6px; display:flex; align-items:center; gap:8px;">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2"></path></svg>
-          Únete a nuestro Canal de Telegram
+          <span data-i18n="login_tg_title">Únete a nuestro Canal de Telegram</span>
         </h3>
-        <p style="font-size:0.95rem; font-weight:600; opacity:0.8; margin-bottom:12px;">Escanea el código QR para no perderte ningún resultado en directo.</p>
+        <p style="font-size:0.95rem; font-weight:600; opacity:0.8; margin-bottom:12px;" data-i18n="login_tg_desc">Escanea el código QR para no perderte ningún resultado en directo.</p>
         <div style="font-weight:900; font-size:1.1rem; color:#0f1a2e; background:rgba(255,255,255,0.6); display:inline-block; padding:4px 12px; border-radius:99px;" id="tgChannelNameText"></div>
       </div>
       <div style="background:#fff; padding:10px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);" id="qrcode"></div>
     </div>
 
     <!-- Standings table -->
-    <div class="sec-title">
+    <div class="sec-title" data-i18n="admin_standings">
       📊 Taula de Classificació
       <span class="sec-badge" id="teamsCount">0 equips</span>
     </div>
@@ -498,7 +503,7 @@
     </div>
 
     <!-- Match history -->
-    <div class="sec-title">
+    <div class="sec-title" data-i18n="admin_played_matches">
       📅 Historial de Partits
       <span class="sec-badge" id="matchCount">0 partits</span>
     </div>
@@ -598,7 +603,7 @@
 
       // Online badge
       const badge = document.getElementById('onlineBadge');
-      if (badge) badge.textContent = window.ONLINE_MODE ? '🌐 Online' : '💾 Local';
+      if (badge) badge.textContent = window.ONLINE_MODE ? `🌐 ${t('online_status')}` : `💾 ${t('local_status')}`;
 
       // Stats
       const totalGoals = matches.reduce((s, m) => s + m.score1 + m.score2, 0);
@@ -606,12 +611,12 @@
       document.getElementById('statTeams').textContent = isTournament ? 32 : standings.length;
       document.getElementById('statGoals').textContent = totalGoals;
       document.getElementById('statAvg').textContent = matches.length > 0 ? (totalGoals / matches.length).toFixed(1) : '–';
-      document.getElementById('lastUpdate').textContent = 'Actualitzat: ' + new Date().toLocaleTimeString('ca-ES');
+      document.getElementById('lastUpdate').textContent = t('tour_updated') + ': ' + new Date().toLocaleTimeString('ca-ES');
 
       // Standings table
       const sw = document.getElementById('standingsWrap');
       const tc = document.getElementById('teamsCount');
-      tc.textContent = (isTournament ? 32 : standings.length) + ' equips';
+      tc.textContent = (isTournament ? 32 : standings.length) + ' ' + t('idx_stat_teams').toLowerCase();
 
       function renderTableRows(stData) {
         const posClass = ['pos-1', 'pos-2', 'pos-3'];
@@ -641,7 +646,7 @@
         sw.innerHTML = Object.entries(groups).map(([gName, gTeams]) => {
           const stData = calcStandings(matches, gTeams);
           return `<div class="group-table-wrap">
-            <div class="group-title">GRUP ${gName}</div>
+            <div class="group-title">${t('admin_group_stage').toUpperCase()} ${gName}</div>
             <table>
               <thead><tr>
                 <th>#</th><th>Equip</th><th title="Partits Jugats">PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>DG</th><th>PTS</th>
@@ -653,7 +658,7 @@
       } else {
         sw.className = 'table-wrap';
         if (standings.length === 0) {
-          sw.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Encara no s\'han jugat partits</div><div class="empty-sub">Juga el primer partit per veure la classificació!</div></div>';
+          sw.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">${t('admin_empty_data')}</div><div class="empty-sub">${t('tour_play_first')}</div></div>`;
         } else {
           sw.innerHTML = `<table>
             <thead><tr>
@@ -667,9 +672,9 @@
       // Match list
       const ml = document.getElementById('matchList');
       const mc = document.getElementById('matchCount');
-      mc.textContent = matches.length + ' partits';
+      mc.textContent = matches.length + ' ' + t('admin_stats_matches').toLowerCase();
       if (matches.length === 0) {
-        ml.innerHTML = '<div class="empty-state"><div class="empty-icon">⚽</div><div class="empty-text">No hi ha partits registrats</div><div class="empty-sub"><a href="game.html" style="color:#60a5fa">Comença a jugar!</a></div></div>';
+        ml.innerHTML = `<div class="empty-state"><div class="empty-icon">⚽</div><div class="empty-text">${t('admin_no_matches_found')}</div><div class="empty-sub"><a href="game.html" style="color:#60a5fa">${t('tour_start_play')}</a></div></div>`;
       } else {
         const reversed = [...matches].reverse();
         ml.innerHTML = '<div class="match-list">' + reversed.map(m => {

@@ -15,6 +15,7 @@
   <script src="firebase-config.js?v=5"></script>
   <script src="auth.js?v=5"></script>
   <script src="db.js?v=5"></script>
+  <script src="i18n.js"></script>
   <script>
     // AUTO-ACCEPT CONFIRMS FOR AUTOMATED TESTING
     window.confirm = function(msg) { console.log('Auto-confirm: ' + msg); return true; };
@@ -214,18 +215,22 @@
 <!-- ── DASHBOARD ── -->
 <div id="dashboard">
   <div class="admin-topbar">
-    <div class="admin-brand">🎲 La Porra 2026</div>
+    <div class="admin-brand" data-i18n="dash_brand">🎲 La Porra 2026</div>
     <div class="admin-tabs">
-      <button class="tab-btn active" data-tab="prediccions">📝 Les Meves Prediccions</button>
-      <button class="tab-btn" data-tab="torneo">🌍 Torneig</button>
-      <button class="tab-btn" data-tab="ranking">🏆 Rànquing Porra</button>
-      <button class="tab-btn" data-tab="inbox" id="btnInboxTab">📬 Bústia</button>
+      <button class="tab-btn active" data-tab="prediccions" data-i18n="dash_tab_pred">📝 Les Meves Prediccions</button>
+      <button class="tab-btn" data-tab="torneo" data-i18n="dash_tab_tour">🌍 Torneig</button>
+      <button class="tab-btn" data-tab="ranking" data-i18n="dash_tab_rank">🏆 Rànquing Porra</button>
+      <button class="tab-btn" data-tab="inbox" id="btnInboxTab" data-i18n="dash_tab_inbox">📬 Bústia</button>
     </div>
     <div class="admin-actions">
-      <span class="balance-badge" id="userBalanceTxt" title="Haz clic para añadir saldo" style="cursor:pointer; transition: transform 0.2s;">💰 --</span>
+      <select class="lang-selector" aria-label="Idioma" style="background: rgba(255,255,255,0.1); border: 1px solid var(--border); border-radius: 99px; color: var(--text); padding: 4px 12px; outline: none; cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 0.78rem; font-weight: 700; margin-right: 8px;">
+        <option value="ca">VAL</option>
+        <option value="es" style="color: black;">ESP</option>
+      </select>
+      <span class="balance-badge" id="userBalanceTxt" data-i18n-title="dash_balance_title" title="Haz clic para añadir saldo" style="cursor:pointer; transition: transform 0.2s;">💰 --</span>
       <span style="color:var(--muted);font-size:0.8rem;margin-right:10px;display:flex;align-items:center;" id="userEmailTxt"></span>
-      <a href="tournament.html" class="hd-link">🌍 Resultats Reals</a>
-      <button class="logout-btn" id="logoutBtn">Tancar sessió</button>
+      <a href="tournament.html" class="hd-link" data-i18n="dash_hd_link">🌍 Resultats Reals</a>
+      <button class="logout-btn" id="logoutBtn" data-i18n="logout">Tancar sessió</button>
     </div>
   </div>
 
@@ -233,10 +238,10 @@
 
     <!-- ── TAB: PREDICCIONS ── -->
     <div class="tab-panel active" id="tab-prediccions">
-      <div class="panel-title">📝 Fes la teva Porra</div>
-      <p style="color:var(--muted); margin-bottom:20px; font-size:0.9rem;">
+      <div class="panel-title" data-i18n="dash_pred_title">📝 Fes la teva Porra</div>
+      <p style="color:var(--muted); margin-bottom:20px; font-size:0.9rem;" data-i18n="dash_pred_desc">
         Introdueix els resultats que creus que es donaran en els partits de la fase de grups. 
-        Guanyaràs <strong>3 punts</strong> si encertes el resultat exacte, i <strong>1 punt</strong> si encertes el guanyador o l'empat.
+        Guanyaràs 3 punts si encertes el resultat exacte, i 1 punt si encertes el guanyador o l'empat.
       </p>
       
       <div id="liveBettingWrap"></div>
