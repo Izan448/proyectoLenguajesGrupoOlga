@@ -219,6 +219,7 @@
       <button class="tab-btn active" data-tab="prediccions">📝 Les Meves Prediccions</button>
       <button class="tab-btn" data-tab="torneo">🌍 Torneig</button>
       <button class="tab-btn" data-tab="ranking">🏆 Rànquing Porra</button>
+      <button class="tab-btn" data-tab="inbox" id="btnInboxTab">📬 Bústia</button>
     </div>
     <div class="admin-actions">
       <span class="balance-badge" id="userBalanceTxt" title="Haz clic para añadir saldo" style="cursor:pointer; transition: transform 0.2s;">💰 --</span>
@@ -248,7 +249,7 @@
         <h4 style="color:var(--gold); margin-bottom:14px; font-size:1.1rem;">📊 Resum d'Apostes de la Lligueta</h4>
         <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.95rem;"><span>Partits nous a apostar:</span> <strong id="gb_count">0</strong></div>
         <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.95rem;"><span>Cost total (5€ / partit):</span> <strong id="gb_cost" style="color:var(--red)">0€</strong></div>
-        <div style="display:flex; justify-content:space-between; font-size:0.95rem;"><span>Guany potencial (15€ / partit):</span> <strong id="gb_pot" style="color:var(--green)">0€</strong></div>
+        <div style="display:flex; justify-content:space-between; font-size:0.95rem;"><span>Guany potencial (25€ / partit):</span> <strong id="gb_pot" style="color:var(--green)">0€</strong></div>
       </div>
       
       <button class="save-bets-btn" id="btnSaveBets" style="display:none;">💾 Confirmar i Pagar Apostes</button>
@@ -289,6 +290,19 @@
       <div class="panel-title">🏆 Classificació de la Porra</div>
       <div class="table-wrap" id="rankingWrap">
         <div class="empty-state"><div class="empty-icon">📊</div><div class="empty-text">Carregant rànquing...</div></div>
+      </div>
+    </div>
+
+    <!-- ── TAB: INBOX ── -->
+    <div class="tab-panel" id="tab-inbox">
+      <div class="panel-title">📬 Bústia i Apostes en Curs</div>
+      <div id="inboxPendingWrap" style="margin-bottom:30px;">
+         <h3 style="color:var(--gold); margin-bottom:15px; font-size:1.1rem;">⏳ Apostes en Curs</h3>
+         <div id="inboxPendingList"></div>
+      </div>
+      <div id="inboxMessagesWrap">
+         <h3 style="color:var(--text); margin-bottom:15px; font-size:1.1rem;">📥 Notificacions</h3>
+         <div id="inboxMessagesList"></div>
       </div>
     </div>
 
@@ -375,6 +389,7 @@
       btn.classList.add('active');
       document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
       if (btn.dataset.tab === 'ranking') renderRanking();
+      if (btn.dataset.tab === 'inbox') renderInbox();
     };
   });
 
@@ -416,6 +431,7 @@
     renderBetting();
     await renderUserBracket();
     renderRanking(); // Preload ranking
+    await renderInbox();
   }
 
   async function renderChampionBet() {
@@ -674,7 +690,7 @@
     });
     document.getElementById('gb_count').textContent = newBetsCount;
     document.getElementById('gb_cost').textContent = (newBetsCount * 5) + '€';
-    document.getElementById('gb_pot').textContent = (newBetsCount * 15) + '€';
+    document.getElementById('gb_pot').textContent = (newBetsCount * 25) + '€';
     return newBetsCount;
   };
 
@@ -901,6 +917,96 @@
     } catch (e) {
       console.warn("Error calc ranking:", e);
       wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-text">Error carregant el rànquing.</div></div>';
+    }
+  }
+
+  // ── INBOX & APOSTES EN CURS ──────────────────────────────────
+  async function renderInbox() {
+    const pendWrap = document.getElementById('inboxPendingList');
+    const msgWrap = document.getElementById('inboxMessagesList');
+    
+    // Carregar totes les apostes i missatges
+    const [allBets, liveBets, allBracketBets, allTourBets, messages] = await Promise.all([
+      DB.getUserBets(currentUserUid),
+      window.DB ? firebase.database().ref('activeBets').once('value').then(s=>s.val()||{}) : {},
+      DB.getBracketBets(),
+      DB.getTournamentBets(),
+      DB.getInbox(currentUserUid)
+    ]);
+
+    // 1. Dibuixar apostes pendents
+    let htmlPend = '';
+    
+    // Lligueta
+    Object.entries(allBets).forEach(([mId, b]) => {
+      if (!b.resolved) {
+        htmlPend += `<div class="team-admin-card" style="margin-bottom:8px;">
+          📝 Porra Lligueta (${mId}): apostat ${b.score1}-${b.score2} (5€)
+        </div>`;
+      }
+    });
+
+    // En viu
+    Object.entries(liveBets).forEach(([mId, betsMap]) => {
+      const myLive = betsMap[currentUserUid];
+      if (myLive && !myLive.resolved) {
+        htmlPend += `<div class="team-admin-card" style="margin-bottom:8px; border-color:var(--red);">
+          🔴 En Viu (${mId}): apostat ${myLive.amount}€ a ${myLive.prediction}
+        </div>`;
+      }
+    });
+
+    // Bracket
+    const myBracket = allBracketBets[currentUserUid] || {};
+    Object.entries(myBracket).forEach(([mId, b]) => {
+      if (!b.resolved) {
+        htmlPend += `<div class="team-admin-card" style="margin-bottom:8px; border-color:var(--blue);">
+          ⚔️ Eliminatòria (${mId}): apostat ${b.amount}€ a ${b.prediction}
+        </div>`;
+      }
+    });
+
+    // Torneig
+    const myTour = allTourBets[currentUserUid] || {};
+    if (myTour.champion && !myTour.champion.resolved) htmlPend += `<div class="team-admin-card" style="margin-bottom:8px; border-color:var(--gold);">🏆 Campió: apostat ${myTour.champion.amount}€ a ${myTour.champion.prediction}</div>`;
+    if (myTour.runnerUp && !myTour.runnerUp.resolved) htmlPend += `<div class="team-admin-card" style="margin-bottom:8px; border-color:var(--gold);">🥈 Subcampió: apostat ${myTour.runnerUp.amount}€ a ${myTour.runnerUp.prediction}</div>`;
+    if (myTour.semifinalists && !myTour.semifinalists.resolved) htmlPend += `<div class="team-admin-card" style="margin-bottom:8px; border-color:var(--gold);">🎖️ Semifinalistes: apostat ${myTour.semifinalists.amount}€</div>`;
+
+    if (!htmlPend) htmlPend = '<div class="empty-state"><div class="empty-icon">✨</div><div class="empty-text">No tens apostes en curs.</div></div>';
+    pendWrap.innerHTML = htmlPend;
+
+    // 2. Dibuixar notificacions
+    let htmlMsg = '';
+    let unreadCount = 0;
+    if (!messages || messages.length === 0) {
+      htmlMsg = '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">Bústia buida.</div></div>';
+    } else {
+      messages.forEach(m => {
+        if (!m.read) unreadCount++;
+        const color = m.type === 'win' ? 'var(--green)' : m.type === 'loss' ? 'var(--red)' : 'var(--blue)';
+        const d = new Date(m.timestamp);
+        htmlMsg += `<div style="background:rgba(255,255,255,0.03); border-left:4px solid ${color}; padding:12px; margin-bottom:8px; border-radius:4px;">
+          <div style="font-weight:700; margin-bottom:4px; font-size:0.9rem;">${m.title}</div>
+          <div style="font-size:0.85rem; color:var(--muted);">${m.body}</div>
+          <div style="font-size:0.7rem; color:rgba(255,255,255,0.3); margin-top:6px;">${d.toLocaleString()}</div>
+        </div>`;
+      });
+    }
+    msgWrap.innerHTML = htmlMsg;
+
+    // Actualitzar unread badge
+    const btnInbox = document.getElementById('btnInboxTab');
+    if (btnInbox) {
+      btnInbox.innerHTML = `📬 Bústia ${unreadCount > 0 ? '<span style="background:var(--red); color:white; border-radius:99px; padding:2px 6px; font-size:0.7rem; margin-left:4px;">'+unreadCount+'</span>' : ''}`;
+    }
+
+    // Marcar com a llegits
+    if (unreadCount > 0) {
+      setTimeout(() => {
+        DB.markInboxRead(currentUserUid).then(() => {
+          if (btnInbox) btnInbox.innerHTML = '📬 Bústia';
+        });
+      }, 2000);
     }
   }
 

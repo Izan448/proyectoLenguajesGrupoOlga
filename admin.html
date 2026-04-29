@@ -1583,52 +1583,68 @@
         }
 
         // ── RESOLUCIÓ DE PREMIS (FASE DE GRUPS) ───────────────────
-        const matchIdStr = `${t1.abbr}_VS_${t2.abbr}`;
-        const matchIdInv = `${t2.abbr}_VS_${t1.abbr}`;
-        let winnersCount = 0, distributed = 0;
-
-        try {
-          const allUsersBets = await DB.getAllUsersBets();
-          for (const [uid, uData] of Object.entries(allUsersBets)) {
-            if (!uData.bets) continue;
-            const bet = uData.bets[matchIdStr] || uData.bets[matchIdInv];
-
-            // Només processem si està pagada i no està resolta
-            if (bet && bet.paid && !bet.resolved) {
-              const betT1Score = uData.bets[matchIdStr] ? bet.score1 : bet.score2;
-              const betT2Score = uData.bets[matchIdStr] ? bet.score2 : bet.score1;
-              const realWinner = s1 > s2 ? 'team1' : s2 > s1 ? 'team2' : 'draw';
-              const betWinner = bet.score1 > bet.score2 ? 'team1' : bet.score2 > bet.score1 ? 'team2' : 'draw';
-
-              if (betT1Score === s1 && betT2Score === s2) {
-                const prize = 15;
-                await DB.updateUserBalance(uid, prize);
-                winnersCount++;
-                distributed += prize;
-              } else if (realWinner === betWinner) {
-                // Consolacion 1 punto? En apuestas.html se menciona 1 punto. 
-                // Pero en admin.html addMatchBtn solo da premio si es resultado exacto.
-                // Wait, in apuestas.html it says "1 punt si encertes el guanyador o l'empat."
-                // Wait, "1 punt" means points in the ranking, NOT money!
-                // Money is only for exact score (15€). So we don't add money here.
-              }
-              // Marquem com a resolta
-              bet.resolved = true;
-              const keyToUpdate = uData.bets[matchIdStr] ? matchIdStr : matchIdInv;
-              await DB.saveUserBet(uid, keyToUpdate, bet);
-            }
-          }
-        } catch (e) { console.warn("Error resolvent premis:", e); }
+        await resolveGroupBets(matchData);
 
         await sendTelegramMessage(matchData);
 
         await renderAll();
         showToast('✅ Partit guardat!', 'success');
+      } catch (e) { showToast('❌ Error: ' + e.message, 'error'); }
+    };
+
+    async function resolveGroupBets(matchData) {
+      if (!window.DB || !DB.getAllUsersBets) return;
+      
+      const mId1 = `${matchData.team1.abbr}_VS_${matchData.team2.abbr}`;
+      const mId2 = `${matchData.team2.abbr}_VS_${matchData.team1.abbr}`;
+      let winnersCount = 0, distributed = 0;
+      
+      try {
+        const allUsers = await DB.getAllUsersBets();
+        for (const [uid, userData] of Object.entries(allUsers)) {
+          if (!userData.bets) continue;
+          
+          let b = userData.bets[mId1];
+          let isInv = false;
+          if (!b) { b = userData.bets[mId2]; isInv = true; }
+          
+          if (b && b.paid && !b.resolved) {
+            const s1 = isInv ? matchData.score2 : matchData.score1;
+            const s2 = isInv ? matchData.score1 : matchData.score2;
+            
+            if (b.score1 === s1 && b.score2 === s2) {
+              const prize = 25; // PREMI AUGMENTAT A 25€
+              await DB.updateUserBalance(uid, prize);
+              winnersCount++;
+              distributed += prize;
+              
+              if (DB.addInboxMessage) {
+                await DB.addInboxMessage(uid, {
+                  title: '🎉 Porra Encertada!',
+                  body: `Has guanyat ${prize}€ al partit ${matchData.team1.name} ${matchData.score1}-${matchData.score2} ${matchData.team2.name}!`,
+                  type: 'win'
+                });
+              }
+            } else {
+              if (DB.addInboxMessage) {
+                await DB.addInboxMessage(uid, {
+                  title: '❌ Porra Fallada',
+                  body: `El teu pronòstic pel partit ${matchData.team1.name} vs ${matchData.team2.name} no ha estat correcte.`,
+                  type: 'loss'
+                });
+              }
+            }
+            
+            b.resolved = true;
+            await DB.saveUserBet(uid, isInv ? mId2 : mId1, b);
+          }
+        }
+        
         if (winnersCount > 0) {
           setTimeout(() => showToast(`🎉 S'han repartit ${distributed}€ a ${winnersCount} guanyadors de la lligueta!`, 'success'), 3500);
         }
-      } catch (e) { showToast('❌ Error: ' + e.message, 'error'); }
-    };
+      } catch (e) { console.warn("Error resolvent premis grup:", e); }
+    }
 
     window.checkPens = function(id) {
       const s1 = document.getElementById('bs1_' + id).value;
@@ -1699,11 +1715,18 @@
       let distributed = 0;
       for (const [uid, userBets] of Object.entries(betsData)) {
         const bet = userBets[mId];
-        if (bet && bet.prediction === winnerTeam.name) {
-          const prize = bet.amount * 2;
-          await DB.updateUserBalance(uid, prize);
-          winnersCount++;
-          distributed += prize;
+        if (bet && !bet.resolved) {
+          bet.resolved = true;
+          if (bet.prediction === winnerTeam.name) {
+            const prize = bet.amount * 2;
+            await DB.updateUserBalance(uid, prize);
+            winnersCount++;
+            distributed += prize;
+            if (DB.addInboxMessage) await DB.addInboxMessage(uid, { title: '🎉 Eliminatòria Encertada!', body: `Has guanyat ${prize}€ apostant a la victòria de ${winnerTeam.name}.`, type: 'win' });
+          } else {
+            if (DB.addInboxMessage) await DB.addInboxMessage(uid, { title: '❌ Eliminatòria Fallada', body: `Has perdut ${bet.amount}€ al partit on ha guanyat ${winnerTeam.name}.`, type: 'loss' });
+          }
+          await DB.placeBracketBet(uid, mId, bet.amount, bet.prediction, true); // Guardar estado
         }
       }
 
@@ -1714,16 +1737,21 @@
           const semiTeams = bracket.quarterFinals.map(m => m.winner.name);
           const tbets = await DB.getTournamentBets();
           for (const [uid, userBets] of Object.entries(tbets)) {
-            if (userBets.semifinalists && userBets.semifinalists.prediction) {
+            if (userBets.semifinalists && userBets.semifinalists.prediction && !userBets.semifinalists.resolved) {
               const preds = userBets.semifinalists.prediction;
               let hits = 0;
               preds.forEach(p => { if (semiTeams.includes(p)) hits++; });
+              userBets.semifinalists.resolved = true;
               if (hits === 4) {
                 const prize = userBets.semifinalists.amount * 5;
                 await DB.updateUserBalance(uid, prize);
                 distributed += prize;
                 winnersCount++;
+                if (DB.addInboxMessage) await DB.addInboxMessage(uid, { title: '🎉 Semifinalistes Encertats!', body: `Has guanyat ${prize}€ (x5) apostant als 4 semifinalistes!`, type: 'win' });
+              } else {
+                if (DB.addInboxMessage) await DB.addInboxMessage(uid, { title: '❌ Semifinalistes Fallats', body: `Has fallat l'aposta dels 4 semifinalistes. Has perdut ${userBets.semifinalists.amount}€.`, type: 'loss' });
               }
+              await DB.placeTournamentBet(uid, 'semifinalists', userBets.semifinalists);
             }
           }
         }
@@ -1735,17 +1763,31 @@
 
         const tbets = await DB.getTournamentBets();
         for (const [uid, userBets] of Object.entries(tbets)) {
-          if (userBets.champion && userBets.champion.prediction === champion) {
-            const prize = userBets.champion.amount * 3;
-            await DB.updateUserBalance(uid, prize);
-            distributed += prize;
-            winnersCount++;
+          if (userBets.champion && !userBets.champion.resolved) {
+            userBets.champion.resolved = true;
+            if (userBets.champion.prediction === champion) {
+              const prize = userBets.champion.amount * 3;
+              await DB.updateUserBalance(uid, prize);
+              distributed += prize;
+              winnersCount++;
+              if (DB.addInboxMessage) await DB.addInboxMessage(uid, { title: '🏆 Campió Encertat!', body: `Has guanyat ${prize}€ (x3) pel teu campió: ${champion}!`, type: 'win' });
+            } else {
+              if (DB.addInboxMessage) await DB.addInboxMessage(uid, { title: '❌ Campió Fallat', body: `El campió ha estat ${champion}, no pas el teu candidat.`, type: 'loss' });
+            }
+            await DB.placeTournamentBet(uid, 'champion', userBets.champion);
           }
-          if (userBets.runnerUp && userBets.runnerUp.prediction === runnerUp) {
-            const prize = userBets.runnerUp.amount * 2;
-            await DB.updateUserBalance(uid, prize);
-            distributed += prize;
-            winnersCount++;
+          if (userBets.runnerUp && !userBets.runnerUp.resolved) {
+            userBets.runnerUp.resolved = true;
+            if (userBets.runnerUp.prediction === runnerUp) {
+              const prize = userBets.runnerUp.amount * 2;
+              await DB.updateUserBalance(uid, prize);
+              distributed += prize;
+              winnersCount++;
+              if (DB.addInboxMessage) await DB.addInboxMessage(uid, { title: '🥈 Subcampió Encertat!', body: `Has guanyat ${prize}€ (x2) pel subcampió: ${runnerUp}!`, type: 'win' });
+            } else {
+              if (DB.addInboxMessage) await DB.addInboxMessage(uid, { title: '❌ Subcampió Fallat', body: `El subcampió ha estat ${runnerUp}, no pas el teu candidat.`, type: 'loss' });
+            }
+            await DB.placeTournamentBet(uid, 'runnerUp', userBets.runnerUp);
           }
         }
       }
@@ -1992,13 +2034,28 @@
       let distributed = 0;
 
       for (const [uid, bet] of Object.entries(bets)) {
-        if (bet.prediction === realWinner) {
-          const prize = bet.amount * 2;
-          await DB.updateUserBalance(uid, prize);
-          winnersCount++;
-          distributed += prize;
+        if (!bet.resolved) {
+          bet.resolved = true;
+          if (bet.prediction === realWinner) {
+            const prize = bet.amount * 2;
+            await DB.updateUserBalance(uid, prize);
+            winnersCount++;
+            distributed += prize;
+            if (DB.addInboxMessage) await DB.addInboxMessage(uid, { title: '🎉 Aposta en Viu Guanyada!', body: `Has guanyat ${prize}€ apostant al partit ${activeMatch.team1.name} vs ${activeMatch.team2.name}.`, type: 'win' });
+          } else {
+            if (DB.addInboxMessage) await DB.addInboxMessage(uid, { title: '❌ Aposta en Viu Perduda', body: `Has perdut ${bet.amount}€ al partit ${activeMatch.team1.name} vs ${activeMatch.team2.name}.`, type: 'loss' });
+          }
+          if (window.firebase) {
+            await firebase.database().ref(`activeBets/${activeMatch.id}/${uid}`).set(bet);
+          } else {
+            const bs = JSON.parse(localStorage.getItem('porraLiveBets_' + activeMatch.id) || '{}');
+            bs[uid] = bet;
+            localStorage.setItem('porraLiveBets_' + activeMatch.id, JSON.stringify(bs));
+          }
         }
       }
+
+      await resolveGroupBets(matchData);
 
       try {
         if (window.DB) {
