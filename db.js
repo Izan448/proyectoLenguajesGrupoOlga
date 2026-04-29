@@ -415,6 +415,47 @@ const DB = (() => {
       }
     },
 
+    // ── INBOX (NOTIFICATIONS) ────────────────────────────────
+    async addInboxMessage(uid, message) {
+      const msg = { ...message, id: Date.now(), timestamp: new Date().toISOString(), read: false };
+      if (!isOnline()) {
+        const inbox = lsGet('porraInbox_' + uid) || [];
+        inbox.unshift(msg);
+        lsSet('porraInbox_' + uid, inbox);
+        return;
+      }
+      try {
+        await firebase.database().ref(`users/${uid}/inbox/${msg.id}`).set(msg);
+      } catch (e) { console.warn(e); }
+    },
+    async getInbox(uid) {
+      if (!isOnline()) return lsGet('porraInbox_' + uid) || [];
+      try {
+        const snapshot = await firebase.database().ref(`users/${uid}/inbox`).once('value');
+        const data = snapshot.val();
+        if (!data) return [];
+        return Object.values(data).sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+      } catch (e) { return []; }
+    },
+    async markInboxRead(uid) {
+      if (!isOnline()) {
+        const inbox = lsGet('porraInbox_' + uid) || [];
+        inbox.forEach(m => m.read = true);
+        lsSet('porraInbox_' + uid, inbox);
+        return;
+      }
+      try {
+        const inbox = await this.getInbox(uid);
+        const updates = {};
+        inbox.forEach(m => {
+          if (!m.read) updates[m.id + '/read'] = true;
+        });
+        if (Object.keys(updates).length > 0) {
+          await firebase.database().ref(`users/${uid}/inbox`).update(updates);
+        }
+      } catch (e) { console.warn(e); }
+    },
+
     // Sync Firebase → localStorage (called on game load)
     async syncToLocal() {
       if (!isOnline()) return null;
