@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🎲 La Porra – Chapas 2026</title>
+  <title data-i18n="dash_title">🎲 La Porra – Chapas 2026</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   
@@ -14,6 +14,7 @@
 
   <script src="firebase-config.js?v=5"></script>
   <script src="auth.js?v=5"></script>
+  <script src="i18n.js"></script>
   <script src="db.js?v=5"></script>
   <script>
     // AUTO-ACCEPT CONFIRMS FOR AUTOMATED TESTING
@@ -207,24 +208,28 @@
 <!-- ── LOADING SCREEN ── -->
 <div id="loadingScreen">
   <div style="font-size:3rem;margin-bottom:10px;animation:spin 1s linear infinite">⚽</div>
-  <div>Verificant credencials...</div>
+  <div data-i18n="loading">Verificant credencials...</div>
 </div>
 <style>@keyframes spin { 100% { transform:rotate(360deg); } }</style>
 
 <!-- ── DASHBOARD ── -->
 <div id="dashboard">
   <div class="admin-topbar">
-    <div class="admin-brand">🎲 La Porra 2026</div>
+    <div class="admin-brand" data-i18n="dash_brand">🎲 La Porra 2026</div>
     <div class="admin-tabs">
-      <button class="tab-btn active" data-tab="prediccions">📝 Les Meves Prediccions</button>
-      <button class="tab-btn" data-tab="torneo">🌍 Torneig</button>
-      <button class="tab-btn" data-tab="ranking">🏆 Rànquing Porra</button>
+      <button class="tab-btn active" data-tab="prediccions" data-i18n="dash_tab_pred">📝 Les Meves Prediccions</button>
+      <button class="tab-btn" data-tab="torneo" data-i18n="dash_tab_tour">🌍 Torneig</button>
+      <button class="tab-btn" data-tab="ranking" data-i18n="dash_tab_rank">🏆 Rànquing Porra</button>
     </div>
     <div class="admin-actions">
-      <span class="balance-badge" id="userBalanceTxt" title="Haz clic para añadir saldo" style="cursor:pointer; transition: transform 0.2s;">💰 --</span>
+      <select class="lang-selector" aria-label="Idioma" style="background: rgba(255,255,255,0.1); border: 1px solid var(--border); border-radius: 4px; color: var(--text); padding: 4px; outline: none; cursor: pointer; font-family: 'Outfit', sans-serif; margin-right: 10px;">
+        <option value="ca">VAL</option>
+        <option value="es" style="color: black;">ESP</option>
+      </select>
+      <span class="balance-badge" id="userBalanceTxt" title="Fes clic per afegir saldo" data-i18n-title="dash_balance_title" data-i18n-title="dash_balance_title" style="cursor:pointer; transition: transform 0.2s;">💰 --</span>
       <span style="color:var(--muted);font-size:0.8rem;margin-right:10px;display:flex;align-items:center;" id="userEmailTxt"></span>
-      <a href="tournament.html" class="hd-link">🌍 Resultats Reals</a>
-      <button class="logout-btn" id="logoutBtn">Tancar sessió</button>
+      <a href="tournament.html" class="hd-link" data-i18n="dash_hd_link">🌍 Resultats Reals</a>
+      <button class="logout-btn" id="logoutBtn" data-i18n="logout">Tancar sessió</button>
     </div>
   </div>
 
@@ -232,8 +237,8 @@
 
     <!-- ── TAB: PREDICCIONS ── -->
     <div class="tab-panel active" id="tab-prediccions">
-      <div class="panel-title">📝 Fes la teva Porra</div>
-      <p style="color:var(--muted); margin-bottom:20px; font-size:0.9rem;">
+      <div class="panel-title" data-i18n="dash_pred_title">📝 Fes la teva Porra</div>
+      <p style="color:var(--muted); margin-bottom:20px; font-size:0.9rem;" data-i18n="dash_pred_desc">
         Introdueix els resultats que creus que es donaran en els partits de la fase de grups. 
         Guanyaràs <strong>3 punts</strong> si encertes el resultat exacte, i <strong>1 punt</strong> si encertes el guanyador o l'empat.
       </p>
@@ -245,50 +250,50 @@
       <div id="tourBracketWrap" style="display:flex; flex-direction:column; gap:20px;"></div>
       
       <div id="groupBetsSummary" style="background:rgba(0,0,0,0.3); padding:20px; border-radius:var(--radius); margin-top:24px; border:1px solid var(--border); display:none;">
-        <h4 style="color:var(--gold); margin-bottom:14px; font-size:1.1rem;">📊 Resum d'Apostes de la Lligueta</h4>
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.95rem;"><span>Partits nous a apostar:</span> <strong id="gb_count">0</strong></div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.95rem;"><span>Cost total (5€ / partit):</span> <strong id="gb_cost" style="color:var(--red)">0€</strong></div>
-        <div style="display:flex; justify-content:space-between; font-size:0.95rem;"><span>Guany potencial (15€ / partit):</span> <strong id="gb_pot" style="color:var(--green)">0€</strong></div>
+        <h4 style="color:var(--gold); margin-bottom:14px; font-size:1.1rem;" data-i18n="dash_summary_title">📊 Resum d'Apostes de la Lligueta</h4>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.95rem;"><span data-i18n="dash_summary_new">Partits nous a apostar:</span> <strong id="gb_count">0</strong></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.95rem;"><span data-i18n="dash_summary_cost">Cost total (5€ / partit):</span> <strong id="gb_cost" style="color:var(--red)">0€</strong></div>
+        <div style="display:flex; justify-content:space-between; font-size:0.95rem;"><span data-i18n="dash_summary_pot">Guany potencial (15€ / partit):</span> <strong id="gb_pot" style="color:var(--green)">0€</strong></div>
       </div>
       
-      <button class="save-bets-btn" id="btnSaveBets" style="display:none;">💾 Confirmar i Pagar Apostes</button>
+      <button class="save-bets-btn" id="btnSaveBets" style="display:none;" data-i18n="dash_btn_save_bets">💾 Confirmar i Pagar Apostes</button>
     </div>
 
     <!-- ── TAB: TORNEO ── -->
     <div class="tab-panel" id="tab-torneo">
-      <div class="panel-title">🌍 Apostes de Torneig</div>
-      <p style="color:var(--muted); margin-bottom:20px; font-size:0.9rem;">
+      <div class="panel-title" data-i18n="dash_tour_title">🌍 Apostes de Torneig</div>
+      <p style="color:var(--muted); margin-bottom:20px; font-size:0.9rem;" data-i18n="dash_tour_desc">
         Tria la quantitat que vols apostar i selecciona el teu equip. Es restarà del teu saldo automàticament al confirmar.
       </p>
       
       <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:20px;">
-        <h3 style="color:var(--gold);">🏆 Campió del Món (Cuota x3)</h3>
+        <h3 style="color:var(--gold);" data-i18n="dash_tour_champ">🏆 Campió del Món (Cuota x3)</h3>
         <input type="number" id="amt_champion" class="live-bet-input" style="width:120px; padding:8px; font-size:1rem;" placeholder="€" value="50" min="1" oninput="updatePotentials()">
       </div>
-      <p style="color:var(--muted); font-size:0.8rem; margin-bottom:10px;" id="pot_champion">Guany potencial: 150€</p>
+      <p style="color:var(--muted); font-size:0.8rem; margin-bottom:10px;" id="pot_champion" data-i18n="dash_pot_champ">Guany potencial: 150€</p>
       <div id="championBetWrap" style="margin-bottom:30px;"></div>
       
       <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:20px;">
-        <h3 style="color:var(--text);">🥈 Subcampió (Cuota x2)</h3>
+        <h3 style="color:var(--text);" data-i18n="dash_tour_run">🥈 Subcampió (Cuota x2)</h3>
         <input type="number" id="amt_runnerUp" class="live-bet-input" style="width:120px; padding:8px; font-size:1rem;" placeholder="€" value="50" min="1" oninput="updatePotentials()">
       </div>
-      <p style="color:var(--muted); font-size:0.8rem; margin-bottom:10px;" id="pot_runnerUp">Guany potencial: 100€</p>
+      <p style="color:var(--muted); font-size:0.8rem; margin-bottom:10px;" id="pot_runnerUp" data-i18n="dash_pot_run">Guany potencial: 100€</p>
       <div id="runnerUpBetWrap" style="margin-bottom:30px;"></div>
       
       <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:20px;">
-        <h3 style="color:var(--blue);">🎖️ Els 4 Semifinalistes (Cuota x5)</h3>
+        <h3 style="color:var(--blue);" data-i18n="dash_tour_semi">🎖️ Els 4 Semifinalistes (Cuota x5)</h3>
         <input type="number" id="amt_semifinalists" class="live-bet-input" style="width:120px; padding:8px; font-size:1rem;" placeholder="€" value="50" min="1" oninput="updatePotentials()">
       </div>
-      <p style="color:var(--muted); font-size:0.8rem; margin-bottom:10px;" id="pot_semifinalists">Selecciona 4 equips. Guany potencial: 250€</p>
+      <p style="color:var(--muted); font-size:0.8rem; margin-bottom:10px;" id="pot_semifinalists" data-i18n="dash_pot_semi">Selecciona 4 equips. Guany potencial: 250€</p>
       <div id="semiBetWrap" style="margin-bottom:10px;"></div>
-      <button class="btn-save" id="btnSubmitSemis" style="width:100%; padding:14px; border:none; border-radius:8px; cursor:pointer; background:linear-gradient(135deg,#60a5fa,#3b82f6); color:white; font-weight:bold; display:none;" onclick="submitSemisBet()">Apostar a Semifinalistes</button>
+      <button class="btn-save" id="btnSubmitSemis" style="width:100%; padding:14px; border:none; border-radius:8px; cursor:pointer; background:linear-gradient(135deg,#60a5fa,#3b82f6); color:white; font-weight:bold; display:none;" onclick="submitSemisBet()" data-i18n="dash_btn_semi">Apostar a Semifinalistes</button>
     </div>
 
     <!-- ── TAB: RÀNQUING ── -->
     <div class="tab-panel" id="tab-ranking">
-      <div class="panel-title">🏆 Classificació de la Porra</div>
+      <div class="panel-title" data-i18n="dash_rank_title">🏆 Classificació de la Porra</div>
       <div class="table-wrap" id="rankingWrap">
-        <div class="empty-state"><div class="empty-icon">📊</div><div class="empty-text">Carregant rànquing...</div></div>
+        <div class="empty-state"><div class="empty-icon">📊</div><div class="empty-text" data-i18n="dash_rank_loading">Carregant rànquing...</div></div>
       </div>
     </div>
 
@@ -301,12 +306,12 @@
 <!-- ── RECHARGE MODAL ── -->
 <div class="modal" id="rechargeModal">
   <div class="modal-content">
-    <h3 style="color:var(--gold); margin-bottom:10px;">Añadir Saldo</h3>
-    <p style="color:var(--muted); font-size:0.9rem; margin-bottom:20px;">¿Cuánto saldo quieres añadir? (Máximo 10000)</p>
+    <h3 style="color:var(--gold); margin-bottom:10px;" data-i18n="dash_modal_add_title">Añadir Saldo</h3>
+    <p style="color:var(--muted); font-size:0.9rem; margin-bottom:20px;" data-i18n="dash_modal_add_desc">¿Cuánto saldo quieres añadir? (Máximo 10000)</p>
     <input type="number" id="rechargeAmount" class="live-bet-input" style="width:100%; margin-bottom:15px; box-sizing:border-box;" placeholder="Ej. 100" min="1" max="10000" />
     <div style="display:flex; gap:10px; justify-content:flex-end;">
       <button class="btn-danger" style="padding:10px 16px; border-radius:4px; border:none; color:white; cursor:pointer;" onclick="closeRechargeModal()">Cancelar</button>
-      <button class="btn-save" style="padding:10px 16px; border-radius:4px; border:none; cursor:pointer; background:linear-gradient(135deg,#f5c518,#ff9d00); color:black; font-weight:bold;" onclick="confirmRecharge()">✅ Añadir</button>
+      <button class="btn-save" style="padding:10px 16px; border-radius:4px; border:none; cursor:pointer; background:linear-gradient(135deg,#f5c518,#ff9d00); color:black; font-weight:bold;" onclick="confirmRecharge()" data-i18n="dash_modal_btn_add">✅ Añadir</button>
     </div>
   </div>
 </div>
